@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>学习进度仪表板</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
+  <style>
+    :root {
+      --bg: #f7f9fc;
+      --surface: #ffffff;
+      --primary: #10b981;
+      --primary-dark: #059669;
+      --primary-light: #ecfdf5;
+      --primary-bg: #d1fae5;
+      --secondary: #3b82f6;
+      --secondary-dark: #2563eb;
+      --secondary-light: #eff6ff;
+      --accent: #f59e0b;
+      --accent-dark: #d97706;
+      --accent-light: #fef3c7;
+      --danger: #ef4444;
+      --danger-light: #fee2e2;
+      --text: #111827;
+      --text-muted: #6b7280;
+      --text-light: #9ca3af;
+      --border: #e5e7eb;
+      --border-light: #f3f4f6;
+      --shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.04);
+      --shadow: 0 1px 3px rgba(17, 24, 39, 0.06), 0 1px 2px rgba(17, 24, 39, 0.03);
+      --shadow-md: 0 4px 6px -1px rgba(17, 24, 39, 0.06), 0 2px 4px -2px rgba(17, 24, 39, 0.04);
+      --shadow-lg: 0 10px 15px -3px rgba(17, 24, 39, 0.08), 0 4px 6px -4px rgba(17, 24, 39, 0.05);
+      --radius-sm: 8px;
+      --radius: 12px;
+      --radius-lg: 16px;
+      --gradient-mint: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+      --gradient-sky: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+      --gradient-amber: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+      --gradient-violet: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      background-image:
+        radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.06) 0%, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(59, 130, 246, 0.06) 0%, transparent 50%);
+      background-attachment: fixed;
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      font-size: 14px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .app { max-width: 1200px; margin: 0 auto; padding: 32px 24px 64px; }
+
+    /* 顶部导航 */
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 32px; gap: 16px; flex-wrap: wrap;
+    }
+    .logo { display: flex; align-items: center; gap: 12px; }
+    .logo-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      background: var(--gradient-mint);
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 22px;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+    .logo h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
+    .logo p { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    /* 按钮 */
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 10px 16px; border: 1px solid var(--border);
+      background: var(--surface); color: var(--text);
+      border-radius: var(--radius-sm); font-size: 13px; font-weight: 500;
+      cursor: pointer; transition: all 0.2s ease; font-family: inherit; white-space: nowrap;
+    }
+    .btn:hover { background: var(--border-light); border-color: var(--text-light); transform: translateY(-1px); }
+    .btn-primary {
+      background: var(--gradient-mint); color: white; border: none;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+    }
+    .btn-primary:hover { box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35); transform: translateY(-1px); }
+    .btn-secondary { background: var(--secondary-light); color: var(--secondary-dark); border-color: transparent; }
+    .btn-secondary:hover { background: #dbeafe; }
+
+    /* 总览卡片 */
+    .overview {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 16px; margin-bottom: 32px;
+    }
+    .stat-card {
+      background: var(--surface); padding: 20px; border-radius: var(--radius);
+      border: 1px solid var(--border-light); box-shadow: var(--shadow-sm);
+      position: relative; overflow: hidden; transition: all 0.3s ease;
+    }
+    .stat-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    .stat-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0;
+      height: 3px; background: var(--gradient-mint);
+    }
+    .stat-card.blue::before { background: var(--gradient-sky); }
+    .stat-card.amber::before { background: var(--gradient-amber); }
+    .stat-card.violet::before { background: var(--gradient-violet); }
+    .stat-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; margin-bottom: 12px;
+    }
+    .stat-icon.mint { background: var(--primary-light); color: var(--primary-dark); }
+    .stat-icon.blue { background: var(--secondary-light); color: var(--secondary-dark); }
+    .stat-icon.amber { background: var(--accent-light); color: var(--accent-dark); }
+    .stat-icon.violet { background: #ede9fe; color: #7c3aed; }
+    .stat-value { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; }
+    .stat-label { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+    .stat-unit { font-size: 14px; font-weight: 500; color: var(--text-muted); margin-left: 4px; }
+    .stat-status {
+      font-size: 11px; color: var(--text-light); margin-top: 6px;
+      display: inline-flex; align-items: center; gap: 4px;
+    }
+    .stat-status.done { color: var(--primary-dark); font-weight: 500; }
+
+    /* 段落标题 */
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
+    }
+    .section-title {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 17px; font-weight: 700; letter-spacing: -0.01em;
+    }
+    .section-title .icon { font-size: 20px; }
+    .section-subtitle { font-size: 13px; color: var(--text-muted); margin-left: 8px; font-weight: 400; }
+
+    /* 课程列表 */
+    .courses-section { margin-bottom: 40px; }
+    .course-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    .course-card {
+      background: var(--surface); padding: 20px; border-radius: var(--radius);
+      border: 1px solid var(--border-light); box-shadow: var(--shadow-sm);
+      transition: all 0.3s ease; position: relative;
+    }
+    .course-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    .course-card.completed {
+      background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
+      border-color: var(--primary-bg);
+    }
+    .course-header {
+      display: flex; justify-content: space-between; align-items: start;
+      gap: 12px; margin-bottom: 12px;
+    }
+    .course-name { font-size: 15px; font-weight: 600; flex: 1; line-height: 1.4; }
+    .course-badge {
+      font-size: 11px; padding: 3px 8px; border-radius: 6px;
+      font-weight: 500; white-space: nowrap;
+    }
+    .badge-completed { background: var(--primary-bg); color: var(--primary-dark); }
+    .badge-active { background: var(--secondary-light); color: var(--secondary-dark); }
+
+    .progress-wrapper { margin: 12px 0; }
+    .progress-info {
+      display: flex; justify-content: space-between;
+      font-size: 12px; color: var(--text-muted); margin-bottom: 6px;
+    }
+    .progress-percent { font-weight: 600; color: var(--primary-dark); }
+    .progress-bar {
+      height: 8px; background: var(--border-light); border-radius: 4px; overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%; background: var(--gradient-mint); border-radius: 4px;
+      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .course-meta {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px;
+      font-size: 12px; margin: 12px 0; padding: 12px 0;
+      border-top: 1px solid var(--border-light); border-bottom: 1px solid var(--border-light);
+    }
+    .meta-item { display: flex; flex-direction: column; gap: 2px; }
+    .meta-label { color: var(--text-light); font-size: 11px; }
+    .meta-value { color: var(--text); font-weight: 500; }
+    .course-actions { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+
+    .icon-btn {
+      padding: 6px 10px; border: 1px solid var(--border);
+      background: var(--surface); border-radius: 6px; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 12px; color: var(--text-muted); transition: all 0.2s; font-family: inherit;
+    }
+    .icon-btn:hover { background: var(--border-light); color: var(--text); }
+    .icon-btn.danger:hover { background: var(--danger-light); color: var(--danger); border-color: var(--danger); }
+    .icon-btn.primary { background: var(--primary-light); color: var(--primary-dark); border-color: var(--primary-bg); }
+    .icon-btn.primary:hover { background: var(--primary); color: white; }
+    .icon-btn.secondary { background: var(--secondary-light); color: var(--secondary-dark); border-color: transparent; }
+    .icon-btn.secondary:hover { background: #dbeafe; }
+
+    /* 空状态 */
+    .empty-state {
+      background: var(--surface); border: 2px dashed var(--border);
+      border-radius: var(--radius); padding: 48px 24px; text-align: center;
+    }
+    .empty-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
+    .empty-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+    .empty-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; }
+    .empty-actions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+
+    /* 成就 */
+    .achievements-section { margin-bottom: 32px; }
+    .badge-summary {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--surface); padding: 16px 20px; border-radius: var(--radius);
+      border: 1px solid var(--border-light); margin-bottom: 16px; box-shadow: var(--shadow-sm);
+    }
+    .summary-progress { flex: 1; }
+    .summary-text { font-size: 13px; color: var(--text-muted); margin-bottom: 6px; }
+    .summary-text strong { color: var(--text); }
+    .summary-bar { height: 6px; background: var(--border-light); border-radius: 3px; overflow: hidden; }
+    .summary-fill {
+      height: 100%; background: var(--gradient-amber); border-radius: 3px;
+      transition: width 0.6s ease;
+    }
+    .badge-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px;
+    }
+    .badge-item {
+      background: var(--surface); padding: 16px 12px; border-radius: var(--radius);
+      border: 1px solid var(--border-light); text-align: center;
+      transition: all 0.3s ease; position: relative; cursor: default;
+    }
+    .badge-item.unlocked {
+      background: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%);
+      border-color: var(--accent-light);
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.1);
+    }
+    .badge-item.unlocked:hover {
+      transform: translateY(-3px); box-shadow: 0 8px 20px rgba(245, 158, 11, 0.15);
+    }
+    .badge-item.locked { opacity: 0.55; }
+    .badge-item.locked .badge-icon { filter: grayscale(1); }
+    .badge-icon { font-size: 32px; margin-bottom: 8px; display: inline-block; }
+    .badge-name { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+    .badge-desc { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
+    .badge-status {
+      position: absolute; top: 8px; right: 8px;
+      font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 500;
+    }
+    .status-unlocked { background: var(--primary-bg); color: var(--primary-dark); }
+    .status-locked { background: var(--border-light); color: var(--text-light); }
+
+    /* 模态框 */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(17, 24, 39, 0.5); backdrop-filter: blur(4px);
+      display: none; align-items: center; justify-content: center;
+      z-index: 100; padding: 20px; animation: fadeIn 0.2s ease;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: var(--surface); border-radius: var(--radius-lg);
+      padding: 24px; width: 100%; max-width: 480px; max-height: 90vh;
+      overflow-y: auto; box-shadow: var(--shadow-lg); animation: slideUp 0.3s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .modal-header {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
+    }
+    .modal-title { font-size: 17px; font-weight: 700; }
+    .modal-close {
+      background: none; border: none; font-size: 22px; cursor: pointer;
+      color: var(--text-muted); width: 28px; height: 28px; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center; transition: background 0.2s;
+      line-height: 1;
+    }
+    .modal-close:hover { background: var(--border-light); }
+
+    .form-group { margin-bottom: 16px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-label {
+      display: block; font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 6px;
+    }
+    .form-input, .form-select {
+      width: 100%; padding: 10px 12px; border: 1px solid var(--border);
+      border-radius: var(--radius-sm); font-size: 14px; font-family: inherit;
+      background: var(--surface); color: var(--text); transition: all 0.2s;
+    }
+    .form-input:focus, .form-select:focus {
+      outline: none; border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    }
+    textarea.form-input { resize: vertical; font-family: ui-monospace, monospace; font-size: 12px; }
+    .form-static {
+      padding: 10px 12px; background: var(--border-light); border-radius: var(--radius-sm);
+      font-size: 14px; font-weight: 500; color: var(--text);
+    }
+    .form-hint { font-size: 11px; color: var(--text-light); margin-top: 4px; }
+    .modal-footer {
+      display: flex; gap: 8px; justify-content: flex-end;
+      margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border-light);
+    }
+
+    /* Toast */
+    .toast-container {
+      position: fixed; top: 24px; right: 24px; z-index: 200;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .toast {
+      background: var(--surface); padding: 12px 16px; border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-lg); border-left: 3px solid var(--primary);
+      display: flex; align-items: center; gap: 10px; min-width: 280px; max-width: 360px;
+      animation: slideIn 0.3s ease;
+    }
+    @keyframes slideIn {
+      from { transform: translateX(120%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    .toast.success { border-left-color: var(--primary); }
+    .toast.error { border-left-color: var(--danger); }
+    .toast.info { border-left-color: var(--secondary); }
+    .toast.achievement { border-left-color: var(--accent); background: linear-gradient(135deg, #fffbeb 0%, #ffffff 60%); }
+    .toast-icon { font-size: 18px; }
+    .toast-content { flex: 1; }
+    .toast-title { font-size: 13px; font-weight: 600; }
+    .toast-msg { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+    /* 滚动条 */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-light); }
+
+    /* 响应式 */
+    @media (max-width: 768px) {
+      .app { padding: 20px 16px 40px; }
+      .overview { grid-template-columns: repeat(2, 1fr); }
+      .course-grid { grid-template-columns: 1fr; }
+      .form-row { grid-template-columns: 1fr; }
+      header { flex-direction: column; align-items: stretch; }
+      .actions { justify-content: flex-end; }
+    }
+    @media (max-width: 480px) {
+      .overview { grid-template-columns: 1fr 1fr; gap: 12px; }
+      .stat-card { padding: 16px; }
+      .stat-value { font-size: 24px; }
+      .toast-container { top: 12px; right: 12px; left: 12px; }
+      .toast { min-width: 0; max-width: none; }
+    }
+
+    footer {
+      text-align: center; margin-top: 48px; padding-top: 24px;
+      border-top: 1px solid var(--border-light);
+      font-size: 12px; color: var(--text-light);
+    }
+    footer a { color: var(--secondary-dark); text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="logo">
+        <div class="logo-icon">📚</div>
+        <div>
+          <h1>学习进度仪表板</h1>
+          <p>记录每一步成长</p>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-secondary" id="importBtn">
+          <span>📥</span><span>导入</span>
+        </button>
+        <button class="btn" id="exportBtn">
+          <span>📤</span><span>导出</span>
+        </button>
+        <button class="btn btn-primary" id="addCourseBtn">
+          <span>＋</span><span>添加课程</span>
+        </button>
+      </div>
+    </header>
+
+    <section class="overview">
+      <div class="stat-card">
+        <div class="stat-icon mint">📖</div>
+        <div class="stat-value" id="statActive">0</div>
+        <div class="stat-label">在学课程</div>
+      </div>
+      <div class="stat-card blue">
+        <div class="stat-icon blue">✅</div>
+        <div class="stat-value" id="statCompleted">0</div>
+        <div class="stat-label">已完成课程</div>
+      </div>
+      <div class="stat-card amber">
+        <div class="stat-icon amber">⏱️</div>
+        <div class="stat-value"><span id="statHours">0</span><span class="stat-unit">小时</span></div>
+        <div class="stat-label">总学习时长</div>
+      </div>
+      <div class="stat-card violet">
+        <div class="stat-icon violet">🔥</div>
+        <div class="stat-value" id="statStreak">0</div>
+        <div class="stat-label">连续学习天数</div>
+        <div class="stat-status" id="todayStatus">今日还未记录</div>
+      </div>
+    </section>
+
+    <section class="courses-section">
+      <div class="section-header">
+        <div class="section-title">
+          <span class="icon">📖</span>
+          <span>在学课程</span>
+          <span class="section-subtitle" id="courseCount">0 门</span>
+        </div>
+      </div>
+      <div id="courseContainer"></div>
+    </section>
+
+    <section class="courses-section" id="completedSection" style="display:none">
+      <div class="section-header">
+        <div class="section-title">
+          <span class="icon">✅</span>
+          <span>已完成课程</span>
+          <span class="section-subtitle" id="completedCount">0 门</span>
+        </div>
+      </div>
+      <div id="completedContainer"></div>
+    </section>
+
+    <section class="achievements-section">
+      <div class="section-header">
+        <div class="section-title">
+          <span class="icon">🏆</span>
+          <span>成就徽章</span>
+          <span class="section-subtitle">达到条件自动解锁</span>
+        </div>
+      </div>
+      <div class="badge-summary">
+        <div class="summary-progress">
+          <div class="summary-text">
+            已解锁 <strong id="unlockedCount">0</strong> / <span id="totalCount">0</span> 枚徽章
+          </div>
+          <div class="summary-bar">
+            <div class="summary-fill" id="summaryFill" style="width: 0%"></div>
+          </div>
+        </div>
+      </div>
+      <div class="badge-grid" id="badgeGrid"></div>
+    </section>
+
+    <footer>
+      数据保存在你的浏览器本地 · 建议定期导出备份 · 可部署到 GitHub Pages
+    </footer>
+  </div>
+
+  <!-- 课程表单模态框 -->
+  <div class="modal-overlay" id="courseModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title" id="modalTitle">添加课程</div>
+        <button class="modal-close" data-close>×</button>
+      </div>
+      <form id="courseForm">
+        <div class="form-group">
+          <label class="form-label">课程名称</label>
+          <input type="text" class="form-input" name="name" required placeholder="例如：React 进阶实战">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">总课时</label>
+            <input type="number" class="form-input" name="totalLessons" min="0.01" step="0.01" required value="20">
+          </div>
+          <div class="form-group">
+            <label class="form-label">已完成课时</label>
+            <input type="number" class="form-input" name="completedLessons" min="0" step="0.01" value="0">
+            <div class="form-hint">支持任意小数，如 0.25、1.5</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">累计学习时长（分钟）</label>
+          <input type="number" class="form-input" name="totalMinutes" min="0" step="1" value="0">
+          <div class="form-hint">当前已投入的总时间，每次「记录学习」会自动累加</div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">最近学习日期</label>
+            <input type="date" class="form-input" name="lastStudyDate">
+          </div>
+          <div class="form-group">
+            <label class="form-label">预计完成日期</label>
+            <input type="date" class="form-input" name="expectedEndDate">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-close>取消</button>
+          <button type="submit" class="btn btn-primary">保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 记录学习模态框 -->
+  <div class="modal-overlay" id="recordModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">📝 记录学习</div>
+        <button class="modal-close" data-close>×</button>
+      </div>
+      <form id="recordForm">
+        <div class="form-group">
+          <label class="form-label">课程</label>
+          <div class="form-static" id="recordCourseName">—</div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">本次学习时长（分钟）</label>
+            <input type="number" class="form-input" name="minutes" min="0" step="1" required value="30">
+          </div>
+          <div class="form-group">
+            <label class="form-label">本次完成课时</label>
+            <input type="number" class="form-input" name="lessons" min="0" step="0.01" value="1">
+            <div class="form-hint">支持任意小数，如 0.25、0.5</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">学习日期</label>
+          <input type="date" class="form-input" name="studyDate">
+          <div class="form-hint">默认今天，可补记往日</div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-close>取消</button>
+          <button type="submit" class="btn btn-primary">保存记录</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 导入模态框 -->
+  <div class="modal-overlay" id="importModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">导入数据</div>
+        <button class="modal-close" data-close>×</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">选择 JSON 文件</label>
+        <input type="file" class="form-input" id="importFile" accept=".json">
+      </div>
+      <div class="form-group">
+        <label class="form-label">或粘贴 JSON 内容</label>
+        <textarea class="form-input" id="importText" rows="6" placeholder='{"courses": [...], ...}'></textarea>
+      </div>
+      <div class="form-hint" style="margin-bottom: 16px; color: var(--accent-dark);">⚠️ 导入将覆盖现有数据，请先导出备份</div>
+      <div class="modal-footer">
+        <button type="button" class="btn" data-close>取消</button>
+        <button type="button" class="btn btn-primary" id="confirmImport">导入</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>
+    // ====== 数据存储 ======
+    const STORAGE_KEY = 'learning_dashboard_v1';
+    const EPS = 0.001; // 浮点数比较容差
+
+    // 成就定义
+    const ACHIEVEMENTS = [
+      { id: 'first_course',      name: '初出茅庐',   description: '添加第一门课程',     icon: '🌱' },
+      { id: 'course_collector',  name: '课程收藏家', description: '同时在学 5 门课程',  icon: '📚' },
+      { id: 'first_complete',    name: '学海启航',   description: '完成第一门课程',     icon: '🎓' },
+      { id: 'five_complete',     name: '学富五车',   description: '完成 5 门课程',      icon: '🏆' },
+      { id: 'ten_complete',      name: '学识渊博',   description: '完成 10 门课程',     icon: '👑' },
+      { id: 'streak_7',          name: '勤学不辍',   description: '连续学习 7 天',      icon: '🔥' },
+      { id: 'streak_30',         name: '持之以恒',   description: '连续学习 30 天',     icon: '⚡' },
+      { id: 'streak_100',        name: '全勤大师',   description: '连续学习 100 天',    icon: '💎' },
+      { id: 'hours_10',          name: '初窥门径',   description: '总学习时长达 10 小时', icon: '⏱️' },
+      { id: 'hours_50',          name: '渐入佳境',   description: '总学习时长达 50 小时', icon: '⏰' },
+      { id: 'hours_100',         name: '学无止境',   description: '总学习时长达 100 小时', icon: '🌟' },
+      { id: 'lessons_100',       name: '学习达人',   description: '完成 100 节课时',    icon: '🎯' }
+    ];
+
+    function getDefaultState() {
+      return {
+        courses: [],
+        studyLogs: [],
+        unlockedAchievements: []
+      };
+    }
+
+    let state = loadState();
+
+    function loadState() {
+      try {
+        const data = localStorage.getItem(STORAGE_KEY);
+        if (data) {
+          const parsed = JSON.parse(data);
+          const merged = { ...getDefaultState(), ...parsed };
+          // 数据迁移：旧版本用 lessonDuration，新版本改用 totalMinutes
+          merged.courses = (merged.courses || []).map(c => {
+            if (c.totalMinutes === undefined) {
+              const dur = c.lessonDuration || 30;
+              c.totalMinutes = Math.round((Number(c.completedLessons) || 0) * dur);
+            }
+            delete c.lessonDuration;
+            return c;
+          });
+          if (!Array.isArray(merged.studyLogs)) merged.studyLogs = [];
+          if (!Array.isArray(merged.unlockedAchievements)) merged.unlockedAchievements = [];
+          return merged;
+        }
+      } catch (e) { console.error('加载数据失败:', e); }
+      return getDefaultState();
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (e) {
+        showToast('error', '保存失败', '数据无法保存到浏览器');
+      }
+    }
+
+    // ====== 工具函数 ======
+    function uuid() {
+      return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+    }
+
+    function pad(n) { return String(n).padStart(2, '0'); }
+
+    // 把任意数值四舍五入到 2 位小数，避免浮点累加误差
+    function round2(n) { return Math.round((Number(n) || 0) * 100) / 100; }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '—';
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return '—';
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    }
+
+    function todayStr() {
+      const d = new Date();
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    }
+
+    function shiftDateStr(dateStr, days) {
+      const d = new Date(dateStr);
+      d.setDate(d.getDate() + days);
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text == null ? '' : String(text);
+      return div.innerHTML;
+    }
+
+    // 课程是否已完成：完全由课时推导，不依赖独立 completed 字段
+    function isCourseCompleted(course) {
+      return (Number(course.completedLessons) || 0) + EPS >= (Number(course.totalLessons) || 0);
+    }
+
+    // ====== 计算 ======
+    function calculateStreak() {
+      const dates = [...new Set(state.studyLogs.map(l => l.date))].sort();
+      if (dates.length === 0) return 0;
+      const today = todayStr();
+      const yesterday = shiftDateStr(today, -1);
+
+      // 如果今天或昨天没有学习记录，连续天数视为 0
+      if (!dates.includes(today) && !dates.includes(yesterday)) return 0;
+
+      let streak = 0;
+      let checkDate = dates.includes(today) ? today : yesterday;
+
+      while (dates.includes(checkDate)) {
+        streak++;
+        checkDate = shiftDateStr(checkDate, -1);
+      }
+      return streak;
+    }
+
+    function calculateTotalMinutes() {
+      return state.courses.reduce((sum, c) => sum + (Number(c.totalMinutes) || 0), 0);
+    }
+
+    function calculateTodayMinutes() {
+      const today = todayStr();
+      return state.studyLogs
+        .filter(l => l.date === today)
+        .reduce((sum, l) => sum + (Number(l.minutes) || 0), 0);
+    }
+
+    function calculateProgress(course) {
+      const total = Number(course.totalLessons) || 0;
+      if (total === 0) return 0;
+      return Math.min(100, Math.round(((Number(course.completedLessons) || 0) / total) * 100));
+    }
+
+    // ====== 成就检测（动态：解锁 + 重新锁定）======
+    function checkAchievements() {
+      const stats = {
+        activeCourses:    state.courses.filter(c => !isCourseCompleted(c)).length,
+        completedCourses: state.courses.filter(c => isCourseCompleted(c)).length,
+        streakDays:       calculateStreak(),
+        totalMinutes:     calculateTotalMinutes(),
+        completedLessons: state.courses.reduce((sum, c) => sum + (Number(c.completedLessons) || 0), 0),
+        totalCourses:     state.courses.length
+      };
+
+      const conditions = {
+        first_course:     stats.totalCourses >= 1,
+        course_collector: stats.activeCourses >= 5,
+        first_complete:   stats.completedCourses >= 1,
+        five_complete:    stats.completedCourses >= 5,
+        ten_complete:     stats.completedCourses >= 10,
+        streak_7:         stats.streakDays >= 7,
+        streak_30:        stats.streakDays >= 30,
+        streak_100:       stats.streakDays >= 100,
+        hours_10:         stats.totalMinutes >= 600,
+        hours_50:         stats.totalMinutes >= 3000,
+        hours_100:        stats.totalMinutes >= 6000,
+        lessons_100:      stats.completedLessons >= 100
+      };
+
+      // 1. 新解锁
+      const newlyUnlocked = [];
+      Object.keys(conditions).forEach(id => {
+        if (conditions[id] && !state.unlockedAchievements.includes(id)) {
+          state.unlockedAchievements.push(id);
+          newlyUnlocked.push(id);
+        }
+      });
+
+      // 2. 重新锁定：不再满足条件的从已解锁列表移除（静默处理，不弹 toast）
+      const beforeLen = state.unlockedAchievements.length;
+      state.unlockedAchievements = state.unlockedAchievements.filter(id => conditions[id]);
+      const changed = newlyUnlocked.length > 0 || state.unlockedAchievements.length !== beforeLen;
+
+      if (changed) saveState();
+
+      // 新解锁才弹祝贺 toast
+      newlyUnlocked.forEach(id => {
+        const ach = ACHIEVEMENTS.find(a => a.id === id);
+        if (ach) {
+          setTimeout(() => {
+            showToast('achievement', `🏆 解锁成就：${ach.name}`, ach.description);
+          }, 200);
+        }
+      });
+    }
+
+    // ====== 渲染 ======
+    function renderOverview() {
+      const active = state.courses.filter(c => !isCourseCompleted(c)).length;
+      const completed = state.courses.filter(c => isCourseCompleted(c)).length;
+      const hours = (calculateTotalMinutes() / 60).toFixed(1);
+      const streak = calculateStreak();
+      const todayMin = calculateTodayMinutes();
+
+      document.getElementById('statActive').textContent = active;
+      document.getElementById('statCompleted').textContent = completed;
+      document.getElementById('statHours').textContent = hours;
+      document.getElementById('statStreak').textContent = streak;
+
+      const statusEl = document.getElementById('todayStatus');
+      if (todayMin > 0) {
+        statusEl.textContent = `✓ 今日已学 ${todayMin} 分钟`;
+        statusEl.className = 'stat-status done';
+      } else {
+        statusEl.textContent = '今日还未记录';
+        statusEl.className = 'stat-status';
+      }
+    }
+
+    function renderActiveCourses() {
+      const container = document.getElementById('courseContainer');
+      const actives = state.courses.filter(c => !isCourseCompleted(c));
+      document.getElementById('courseCount').textContent = `${actives.length} 门`;
+
+      if (state.courses.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">📖</div>
+            <div class="empty-title">还没有课程</div>
+            <div class="empty-desc">点击「添加课程」开始记录你的学习之旅</div>
+            <div class="empty-actions">
+              <button class="btn btn-primary" onclick="openCourseModal()">添加第一门课程</button>
+              <button class="btn btn-secondary" onclick="loadSampleData()">加载示例数据</button>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      if (actives.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">🎉</div>
+            <div class="empty-title">在学课程已清空</div>
+            <div class="empty-desc">所有课程都已完成，或查看下方「已完成课程」栏</div>
+            <div class="empty-actions">
+              <button class="btn btn-primary" onclick="openCourseModal()">添加新课程</button>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      const sorted = [...actives].sort((a, b) => {
+        return new Date(b.lastStudyDate || 0) - new Date(a.lastStudyDate || 0);
+      });
+
+      container.innerHTML = `<div class="course-grid">${sorted.map(courseCardHTML).join('')}</div>`;
+    }
+
+    function renderCompletedCourses() {
+      const section = document.getElementById('completedSection');
+      const container = document.getElementById('completedContainer');
+      const completed = state.courses.filter(c => isCourseCompleted(c));
+      document.getElementById('completedCount').textContent = `${completed.length} 门`;
+
+      if (completed.length === 0) {
+        section.style.display = 'none';
+        container.innerHTML = '';
+        return;
+      }
+
+      section.style.display = '';
+      const sorted = [...completed].sort((a, b) => {
+        return new Date(b.lastStudyDate || 0) - new Date(a.lastStudyDate || 0);
+      });
+      container.innerHTML = `<div class="course-grid">${sorted.map(courseCardHTML).join('')}</div>`;
+    }
+
+    function courseCardHTML(course) {
+      const progress = calculateProgress(course);
+      const completed = isCourseCompleted(course);
+      const totalMinutes = Number(course.totalMinutes) || 0;
+      return `
+        <div class="course-card ${completed ? 'completed' : ''}">
+          <div class="course-header">
+            <div class="course-name">${escapeHtml(course.name)}</div>
+            <span class="course-badge ${completed ? 'badge-completed' : 'badge-active'}">
+              ${completed ? '已完成' : '在学'}
+            </span>
+          </div>
+          <div class="progress-wrapper">
+            <div class="progress-info">
+              <span>${course.completedLessons} / ${course.totalLessons} 课时 · 累计 ${totalMinutes} 分钟</span>
+              <span class="progress-percent">${progress}%</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: ${progress}%"></div>
+            </div>
+          </div>
+          <div class="course-meta">
+            <div class="meta-item">
+              <span class="meta-label">最近学习</span>
+              <span class="meta-value">${formatDate(course.lastStudyDate)}</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">预计完成</span>
+              <span class="meta-value">${formatDate(course.expectedEndDate)}</span>
+            </div>
+          </div>
+          <div class="course-actions">
+            ${!completed ? `<button class="icon-btn primary" onclick="openRecordModal('${course.id}')" title="记录今天的学习">📝 记录学习</button>` : ''}
+            ${!completed ? `<button class="icon-btn" onclick="completeCourse('${course.id}')" title="跳过逐次记录，直接标记整门课为已完成">✓ 标记结业</button>` : ''}
+            ${completed ? `<button class="icon-btn secondary" onclick="reactivateCourse('${course.id}')" title="课程回到在学状态">↩ 恢复在学</button>` : ''}
+            <button class="icon-btn" onclick="editCourse('${course.id}')" title="编辑课程">✏️ 编辑</button>
+            <button class="icon-btn danger" onclick="deleteCourse('${course.id}')" title="删除课程">🗑 删除</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderAchievements() {
+      const grid = document.getElementById('badgeGrid');
+      const unlocked = state.unlockedAchievements;
+
+      const html = ACHIEVEMENTS.map(ach => {
+        const isUnlocked = unlocked.includes(ach.id);
+        return `
+          <div class="badge-item ${isUnlocked ? 'unlocked' : 'locked'}">
+            <div class="badge-status ${isUnlocked ? 'status-unlocked' : 'status-locked'}">
+              ${isUnlocked ? '已解锁' : '未解锁'}
+            </div>
+            <div class="badge-icon">${ach.icon}</div>
+            <div class="badge-name">${ach.name}</div>
+            <div class="badge-desc">${ach.description}</div>
+          </div>
+        `;
+      }).join('');
+
+      grid.innerHTML = html;
+      document.getElementById('unlockedCount').textContent = unlocked.length;
+      document.getElementById('totalCount').textContent = ACHIEVEMENTS.length;
+      document.getElementById('summaryFill').style.width = `${(unlocked.length / ACHIEVEMENTS.length) * 100}%`;
+    }
+
+    function renderAll() {
+      renderOverview();
+      renderActiveCourses();
+      renderCompletedCourses();
+      renderAchievements();
+    }
+
+    // ====== Toast ======
+    function showToast(type, title, msg) {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      const icons = { success: '✓', error: '✕', info: 'ℹ', achievement: '🏆' };
+      toast.innerHTML = `
+        <div class="toast-icon">${icons[type] || 'ℹ'}</div>
+        <div class="toast-content">
+          <div class="toast-title">${escapeHtml(title)}</div>
+          ${msg ? `<div class="toast-msg">${escapeHtml(msg)}</div>` : ''}
+        </div>
+      `;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.animation = 'slideIn 0.3s ease reverse';
+        setTimeout(() => toast.remove(), 300);
+      }, 3800);
+    }
+
+    // ====== 课程模态框 ======
+    let editingCourseId = null;
+
+    function openCourseModal(courseId = null) {
+      editingCourseId = courseId;
+      const modal = document.getElementById('courseModal');
+      const form = document.getElementById('courseForm');
+      const title = document.getElementById('modalTitle');
+
+      form.reset();
+
+      if (courseId) {
+        const course = state.courses.find(c => c.id === courseId);
+        if (course) {
+          title.textContent = '编辑课程';
+          form.name.value = course.name;
+          form.totalLessons.value = course.totalLessons;
+          form.completedLessons.value = course.completedLessons;
+          form.totalMinutes.value = course.totalMinutes || 0;
+          form.lastStudyDate.value = course.lastStudyDate || '';
+          form.expectedEndDate.value = course.expectedEndDate || '';
+        }
+      } else {
+        title.textContent = '添加课程';
+        form.totalMinutes.value = 0;
+        form.lastStudyDate.value = todayStr();
+      }
+      modal.classList.add('active');
+    }
+
+    function handleCourseSubmit(e) {
+      e.preventDefault();
+      const form = e.target;
+      const totalLessons = Math.max(0.01, parseFloat(form.totalLessons.value) || 0.01);
+      let completedLessons = Math.max(0, parseFloat(form.completedLessons.value) || 0);
+      completedLessons = Math.min(completedLessons, totalLessons);
+      const totalMinutes = Math.max(0, parseInt(form.totalMinutes.value) || 0);
+      const data = {
+        name: form.name.value.trim(),
+        totalLessons: round2(totalLessons),
+        completedLessons: round2(completedLessons),
+        totalMinutes: totalMinutes,
+        lastStudyDate: form.lastStudyDate.value || null,
+        expectedEndDate: form.expectedEndDate.value || null
+      };
+
+      if (!data.name) {
+        showToast('error', '请输入课程名称');
+        return;
+      }
+
+      if (editingCourseId) {
+        const idx = state.courses.findIndex(c => c.id === editingCourseId);
+        if (idx > -1) {
+          state.courses[idx] = { ...state.courses[idx], ...data };
+          showToast('success', '课程已更新');
+        }
+      } else {
+        state.courses.push({ id: uuid(), ...data, createdAt: todayStr() });
+        showToast('success', '课程已添加');
+      }
+
+      saveState();
+      document.getElementById('courseModal').classList.remove('active');
+      editingCourseId = null;
+      renderAll();
+      checkAchievements();
+      renderAchievements();
+    }
+
+    // ====== 记录学习 ======
+    let recordingCourseId = null;
+
+    function openRecordModal(courseId) {
+      recordingCourseId = courseId;
+      const course = state.courses.find(c => c.id === courseId);
+      if (!course) return;
+      document.getElementById('recordCourseName').textContent = course.name;
+      const form = document.getElementById('recordForm');
+      form.minutes.value = 30;
+      form.lessons.value = 1;
+      form.studyDate.value = todayStr();
+      document.getElementById('recordModal').classList.add('active');
+    }
+
+    function handleRecordSubmit(e) {
+      e.preventDefault();
+      const form = e.target;
+      const minutes = Math.max(0, parseInt(form.minutes.value) || 0);
+      const lessons = Math.max(0, parseFloat(form.lessons.value) || 0);
+      const date = form.studyDate.value || todayStr();
+
+      if (minutes === 0 && lessons === 0) {
+        showToast('error', '请输入学习时长或课时');
+        return;
+      }
+
+      const course = state.courses.find(c => c.id === recordingCourseId);
+      if (!course) return;
+
+      const wasCompleted = isCourseCompleted(course);
+      course.completedLessons = round2(Math.min(
+        Number(course.totalLessons) || 0,
+        (Number(course.completedLessons) || 0) + lessons
+      ));
+      course.totalMinutes = (Number(course.totalMinutes) || 0) + minutes;
+      course.lastStudyDate = date;
+
+      state.studyLogs.push({
+        id: uuid(),
+        date: date,
+        courseId: course.id,
+        courseName: course.name,
+        minutes: minutes,
+        lessons: round2(lessons)
+      });
+
+      saveState();
+      document.getElementById('recordModal').classList.remove('active');
+      recordingCourseId = null;
+      renderAll();
+      checkAchievements();
+      renderAchievements();
+
+      const nowCompleted = isCourseCompleted(course);
+      if (nowCompleted && !wasCompleted) {
+        showToast('success', '🎉 课程已完成', `恭喜完成「${course.name}」`);
+      } else {
+        const parts = [];
+        if (minutes > 0) parts.push(`${minutes} 分钟`);
+        if (lessons > 0) parts.push(`${lessons} 课时`);
+        showToast('success', '记录已保存', `本次学习 ${parts.join(' · ')}`);
+      }
+    }
+
+    function completeCourse(courseId) {
+      const course = state.courses.find(c => c.id === courseId);
+      if (!course) return;
+      if (!confirm(`确定将「${course.name}」标记为已结业吗？\n（将跳过逐次记录，直接把课时拉满到 ${course.totalLessons}）`)) return;
+
+      course.completedLessons = round2(Number(course.totalLessons) || 0);
+      course.lastStudyDate = todayStr();
+
+      saveState();
+      renderAll();
+      checkAchievements();
+      renderAchievements();
+      showToast('success', '🎉 课程已结业', `「${course.name}」标记为已完成`);
+    }
+
+    // 恢复在学：把课时回退一点，避免立刻又被判定为已完成
+    function reactivateCourse(courseId) {
+      const course = state.courses.find(c => c.id === courseId);
+      if (!course) return;
+      const total = Number(course.totalLessons) || 0;
+      // 回退 1 课时（若总课时较小则回退 0.1），保底 0
+      const stepBack = total > 1 ? 1 : 0.1;
+      const before = Number(course.completedLessons) || 0;
+      course.completedLessons = round2(Math.max(0, total - stepBack));
+
+      if (!confirm(`将「${course.name}」恢复为在学状态？\n（课时从 ${before} 回退到 ${course.completedLessons}，可在编辑中继续调整）`)) {
+        // 用户取消，不保存
+        return;
+      }
+
+      saveState();
+      renderAll();
+      checkAchievements();
+      renderAchievements();
+      showToast('info', '已恢复在学', `课时已回退到 ${course.completedLessons}，可继续记录学习`);
+    }
+
+    function deleteCourse(courseId) {
+      const course = state.courses.find(c => c.id === courseId);
+      if (!course) return;
+      if (!confirm(`确定要删除「${course.name}」吗？此操作无法撤销。`)) return;
+      state.courses = state.courses.filter(c => c.id !== courseId);
+      // 同时清理该课程的学习记录
+      state.studyLogs = state.studyLogs.filter(l => l.courseId !== courseId);
+      saveState();
+      renderAll();
+      checkAchievements();
+      renderAchievements();
+      showToast('success', '课程已删除');
+    }
+
+    function editCourse(courseId) { openCourseModal(courseId); }
+
+    // ====== 导入导出 ======
+    function exportData() {
+      if (state.courses.length === 0 && state.studyLogs.length === 0) {
+        showToast('info', '暂无数据', '请先添加课程或记录学习');
+        return;
+      }
+      const data = { ...state, exportedAt: new Date().toISOString(), version: '1.2' };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `学习进度备份_${todayStr()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('success', '导出成功', '数据已保存为 JSON 文件');
+    }
+
+    function openImportModal() {
+      document.getElementById('importModal').classList.add('active');
+      document.getElementById('importFile').value = '';
+      document.getElementById('importText').value = '';
+    }
+
+    function confirmImport() {
+      const file = document.getElementById('importFile').files[0];
+      const text = document.getElementById('importText').value.trim();
+
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            applyImport(JSON.parse(e.target.result));
+          } catch (err) {
+            showToast('error', '导入失败', 'JSON 格式错误');
+          }
+        };
+        reader.readAsText(file);
+      } else if (text) {
+        try {
+          applyImport(JSON.parse(text));
+        } catch (err) {
+          showToast('error', '导入失败', 'JSON 格式错误');
+        }
+      } else {
+        showToast('error', '请选择文件或粘贴 JSON 内容');
+      }
+    }
+
+    function applyImport(data) {
+      if (!data || !Array.isArray(data.courses)) {
+        showToast('error', '导入失败', '数据格式不正确');
+        return;
+      }
+      state = {
+        courses: data.courses || [],
+        studyLogs: Array.isArray(data.studyLogs) ? data.studyLogs : [],
+        unlockedAchievements: Array.isArray(data.unlockedAchievements) ? data.unlockedAchievements : []
+      };
+      saveState();
+      document.getElementById('importModal').classList.remove('active');
+      renderAll();
+      checkAchievements();
+      renderAchievements();
+      showToast('success', '导入成功', `已导入 ${state.courses.length} 门课程`);
+    }
+
+    // ====== 示例数据 ======
+    function loadSampleData() {
+      if (state.courses.length > 0) {
+        if (!confirm('已有数据，加载示例数据将覆盖现有数据，是否继续？')) return;
+      }
+      const today = todayStr();
+      const c1 = { id: uuid(), name: 'React 进阶实战',      totalLessons: 30, completedLessons: 18, totalMinutes: 810, lastStudyDate: today,                  expectedEndDate: shiftDateStr(today, 20),  createdAt: shiftDateStr(today, -30) };
+      const c2 = { id: uuid(), name: 'TypeScript 类型体操',  totalLessons: 20, completedLessons: 12, totalMinutes: 360, lastStudyDate: shiftDateStr(today, -1), expectedEndDate: shiftDateStr(today, 15),  createdAt: shiftDateStr(today, -20) };
+      const c3 = { id: uuid(), name: 'CSS 动画艺术',         totalLessons: 15, completedLessons: 15, totalMinutes: 600, lastStudyDate: shiftDateStr(today, -5), expectedEndDate: shiftDateStr(today, -5),  createdAt: shiftDateStr(today, -40) };
+
+      state = {
+        courses: [c1, c2, c3],
+        studyLogs: [],
+        unlockedAchievements: []
+      };
+      // 生成最近 7 天的学习日志（模拟真实的学习节奏）
+      for (let i = 6; i >= 0; i--) {
+        const d = shiftDateStr(today, -i);
+        state.studyLogs.push({ id: uuid(), date: d, courseId: c1.id, courseName: c1.name, minutes: 45, lessons: 0.5 });
+        if (i % 2 === 0) {
+          state.studyLogs.push({ id: uuid(), date: d, courseId: c2.id, courseName: c2.name, minutes: 30, lessons: 0.5 });
+        }
+      }
+
+      saveState();
+      renderAll();
+      checkAchievements();
+      renderAchievements();
+      showToast('success', '示例数据已加载', '可以开始体验了');
+    }
+
+    // ====== 事件绑定 ======
+    document.getElementById('addCourseBtn').addEventListener('click', () => openCourseModal());
+    document.getElementById('exportBtn').addEventListener('click', exportData);
+    document.getElementById('importBtn').addEventListener('click', openImportModal);
+    document.getElementById('confirmImport').addEventListener('click', confirmImport);
+    document.getElementById('courseForm').addEventListener('submit', handleCourseSubmit);
+    document.getElementById('recordForm').addEventListener('submit', handleRecordSubmit);
+
+    document.querySelectorAll('[data-close]').forEach(btn => {
+      btn.addEventListener('click', () => btn.closest('.modal-overlay').classList.remove('active'));
+    });
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) overlay.classList.remove('active');
+      });
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
+      }
+    });
+
+    // 暴露到全局供 onclick 调用
+    window.openCourseModal = openCourseModal;
+    window.editCourse = editCourse;
+    window.deleteCourse = deleteCourse;
+    window.openRecordModal = openRecordModal;
+    window.completeCourse = completeCourse;
+    window.reactivateCourse = reactivateCourse;
+    window.loadSampleData = loadSampleData;
+
+    // ====== 初始化 ======
+    renderAll();
+    checkAchievements();
+    renderAchievements();
+  </script>
+</body>
+</html>
