@@ -828,11 +828,16 @@
       if (cloudReady) return;
       const cloudbase = await loadCloudBaseSDK();
       cloudApp = cloudbase.init({ env: CLOUDBASE_ENV });
-      let auth = cloudApp.auth;
-      if (typeof auth === 'function') auth = auth();
+      // app.auth 是方法（需带 this 调用）或 getter，二者用 typeof 区分
+      let auth;
+      if (typeof cloudApp.auth === 'function') {
+        auth = cloudApp.auth(); // 作为方法调用，保持 this 绑定
+      } else {
+        auth = cloudApp.auth; // getter：直接取实例
+      }
       if (!auth && typeof cloudbase.registerAuth === 'function') {
         try { cloudbase.registerAuth(cloudbase); } catch (_) {}
-        auth = cloudApp.auth; if (typeof auth === 'function') auth = auth();
+        auth = typeof cloudApp.auth === 'function' ? cloudApp.auth() : cloudApp.auth;
       }
       if (!auth) throw new Error('认证模块未加载，无法完成匿名登录');
       let result = null;
@@ -982,7 +987,7 @@
       } else if (/网络|network|connect|timeout|无法连接|etimedout|enetunreach|fetch failed/.test(hay)) {
         title = '网络错误';
         desc = '请检查网络连接后重试';
-      } else if (/not a function|undefined is not|database is not|realtime/.test(hay)) {
+      } else if (/pg模式|pg mode|postgres|relation|column|syntax error|sqlstate/i.test(hay)) {
         title = '环境不支持';
         desc = '该环境可能为 PG 模式，不支持文档数据库。请把完整报错发我，我来换方案';
       }
