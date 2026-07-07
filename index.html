@@ -792,6 +792,7 @@
     // ====== 云端同步（CloudBase 文档数据库，无需 accessKey）======
     const CLOUDBASE_ENV = 'chyling10-d6g1xf7zjecfa9d38';
     const SYNC_CODE_KEY = 'learning_dashboard_sync_code';
+    const PUBLISHABLE_KEY_KEY = 'learning_dashboard_pk';
     const SYNC_COLLECTION = 'learning_dashboard';
     const TCB_SDK_URL = 'https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js';
     let cloudApp = null;
@@ -801,6 +802,17 @@
 
     function getSyncCode() {
       return localStorage.getItem(SYNC_CODE_KEY);
+    }
+
+    function getPublishableKey() {
+      return localStorage.getItem(PUBLISHABLE_KEY_KEY) || '';
+    }
+
+    function savePublishableKey(k) {
+      const v = (k || '').trim();
+      if (v) localStorage.setItem(PUBLISHABLE_KEY_KEY, v);
+      else localStorage.removeItem(PUBLISHABLE_KEY_KEY);
+      cloudReady = false; cloudApp = null; cloudDb = null; collectionEnsured = false; // 强制重新初始化
     }
 
     function generateSyncCode() {
@@ -827,30 +839,31 @@
     async function initCloudBase() {
       if (cloudReady) return;
       const cloudbase = await loadCloudBaseSDK();
-      cloudApp = cloudbase.init({ env: CLOUDBASE_ENV });
-      // app.auth 是方法（需带 this 调用）或 getter，二者用 typeof 区分
-      let auth;
-      if (typeof cloudApp.auth === 'function') {
-        auth = cloudApp.auth(); // 作为方法调用，保持 this 绑定
-      } else {
-        auth = cloudApp.auth; // getter：直接取实例
+      const initOpts = { env: CLOUDBASE_ENV };
+      const pk = getPublishableKey();
+      if (pk) initOpts.accessKey = pk;
+      cloudApp = cloudbase.init(initOpts);
+      // 匿名登录：有 Publishable Key 时为可选，无 Key 时必须成功
+      try {
+        let auth;
+        if (typeof cloudApp.auth === 'function') auth = cloudApp.auth();
+        else auth = cloudApp.auth;
+        if (!auth && typeof cloudbase.registerAuth === 'function') {
+          try { cloudbase.registerAuth(cloudbase); } catch (_) {}
+          auth = typeof cloudApp.auth === 'function' ? cloudApp.auth() : cloudApp.auth;
+        }
+        let result = null;
+        if (auth && typeof auth.signInAnonymously === 'function') {
+          result = await auth.signInAnonymously();
+        } else if (auth && auth.anonymousAuthProvider) {
+          const provider = typeof auth.anonymousAuthProvider === 'function' ? auth.anonymousAuthProvider() : auth.anonymousAuthProvider;
+          if (provider && typeof provider.signIn === 'function') result = await provider.signIn();
+        }
+        if (result && result.error && !pk) throw result.error;
+      } catch (e) {
+        if (!pk) throw e; // 无 Key 时登录失败是致命的
+        console.warn('匿名登录失败，但有 Publishable Key，继续：', e);
       }
-      if (!auth && typeof cloudbase.registerAuth === 'function') {
-        try { cloudbase.registerAuth(cloudbase); } catch (_) {}
-        auth = typeof cloudApp.auth === 'function' ? cloudApp.auth() : cloudApp.auth;
-      }
-      if (!auth) throw new Error('认证模块未加载，无法完成匿名登录');
-      let result = null;
-      if (typeof auth.signInAnonymously === 'function') {
-        result = await auth.signInAnonymously();
-      } else if (auth.anonymousAuthProvider) {
-        const provider = typeof auth.anonymousAuthProvider === 'function' ? auth.anonymousAuthProvider() : auth.anonymousAuthProvider;
-        if (provider && typeof provider.signIn === 'function') result = await provider.signIn();
-      } else {
-        throw new Error('认证模块缺少匿名登录方法：' + Object.keys(auth).slice(0, 12).join(','));
-      }
-      // v3 登录 API 返回 { data, error }，不会抛异常 —— 必须检查 error
-      if (result && result.error) throw result.error;
       cloudDb = cloudApp.database();
       cloudReady = true;
     }
@@ -971,27 +984,24 @@
       console.error('同步错误:', e);
       const hay = (code + ' ' + msg).toLowerCase();
       let title = '同步失败';
-      let desc = code ? `[${code}] ${msg}` : (msg || '未知错误');
+      let hint = '';
       if (/权限|permission|denied|403|无权|未授权|database_permission/.test(hay)) {
-        title = '权限不足';
-        desc = '请在云开发控制台 → 数据库 → learning_dashboard 集合 → 权限设置，选择「所有用户可读写」';
-      } else if (/未认证|unauthenticated|credentials not found|未登录|未登录/.test(hay)) {
-        title = '登录失败';
-        desc = '匿名登录未生效。请前往云开发控制台 → 身份认证 → 登录方式，确认已开启「匿名登录」';
-      } else if (/anonymous|匿名|disabled|未开启|not allowed/.test(hay)) {
-        title = '匿名登录未开启';
-        desc = '请前往云开发控制台 → 身份认证 → 登录方式，开启「匿名登录」后重试';
-      } else if (/collection|集合|not exist|不存在|database_collection/.test(hay)) {
-        title = '集合不存在';
-        desc = '请在云开发控制台 → 数据库，手动新建集合 learning_dashboard，权限选「所有用户可读写」';
-      } else if (/网络|network|connect|timeout|无法连接|etimedout|enetunreach|fetch failed/.test(hay)) {
-        title = '网络错误';
-        desc = '请检查网络连接后重试';
-      } else if (/pg模式|pg mode|postgres|relation|column|syntax error|sqlstate/i.test(hay)) {
-        title = '环境不支持';
-        desc = '该环境可能为 PG 模式，不支持文档数据库。请把完整报错发我，我来换方案';
+        title = '权限不足'; hint = '请把集合权限改为「所有用户可读写」';
+      } else if (/未认证|unauthenticated|credentials not found/.test(hay)) {
+        title = '登录失败'; hint = '请确认已开启匿名登录';
+      } else if (/anonymous|匿名|disabled|未开启/.test(hay)) {
+        title = '匿名登录未开启'; hint = '请在身份认证中开启匿名登录';
+      } else if (/collection|集合|not exist|不存在/.test(hay)) {
+        title = '集合不存在'; hint = '请新建集合 learning_dashboard';
+      } else if (/网络|network|connect|timeout|无法连接|etimedout|enetunreach|fetch|cors|origin|referer|域名|来源|blocked/.test(hay)) {
+        title = '网络错误'; hint = '可能是域名未加白名单：控制台→环境→安全域名，加上你的 github.io 域名';
+      } else if (/pg模式|pg mode|postgres|relation|column|sqlstate/.test(hay)) {
+        title = '环境不支持'; hint = '可能为 PG 模式';
       }
-      if (reqId && desc.length < 90) desc += `（请求ID: ${reqId.slice(0, 12)}）`;
+      let raw = msg || '未知错误';
+      if (code) raw = `[${code}] ${raw}`;
+      let desc = hint ? `${raw} —— ${hint}` : raw;
+      if (reqId) desc += `（ID:${reqId.slice(0, 10)}）`;
       showToast('error', title, desc);
     }
 
@@ -1019,20 +1029,46 @@
       renderSyncModal();
     }
 
+    function pkSection() {
+      const pk = getPublishableKey();
+      return `
+        <div style="margin-bottom:16px; padding:14px; background:var(--border-light); border-radius:12px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+            <span style="font-size:13px; font-weight:600;">🔑 Publishable Key</span>
+            ${pk ? '<span style="font-size:11px; color:var(--primary-dark);">✓ 已设置</span>' : '<span style="font-size:11px; color:var(--accent-dark);">未设置</span>'}
+          </div>
+          <div style="font-size:11px; color:var(--text-muted); margin-bottom:8px; line-height:1.5;">
+            前往 <a href="https://tcb.cloud.tencent.com/dev#/env/apikey" target="_blank" style="color:var(--secondary-dark);">控制台 → API Key 配置</a> 生成。这是浏览器公开密钥，可安全填入。若同步报"网络错误"多半是缺它。
+          </div>
+          <div style="display:flex; gap:8px;">
+            <input type="text" class="form-input" id="pkInput" placeholder="粘贴 Publishable Key" value="${escapeHtml(pk)}" style="font-size:12px; flex:1;">
+            <button class="btn btn-secondary" onclick="savePkFromInput()" style="flex-shrink:0;">保存</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function savePkFromInput() {
+      const v = document.getElementById('pkInput').value.trim();
+      savePublishableKey(v);
+      showToast('success', v ? 'Publishable Key 已保存' : 'Publishable Key 已清除');
+      renderSyncModal();
+    }
+
     function renderSyncModal() {
       const body = document.getElementById('syncBody');
       const code = getSyncCode();
+      let html = pkSection();
       if (!code) {
-        body.innerHTML = `
-          <p style="font-size:13px; color:var(--text-muted); margin-bottom:18px; line-height:1.7;">
-            开启云端同步后，学习数据会保存到云端。<strong>在其他手机或电脑打开本页面，输入同一个同步码</strong>即可同步。<br>
-            本地数据始终保留，断网也能正常使用。
+        html += `
+          <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px; line-height:1.6;">
+            开启后学习数据存到云端，在其他设备输入同一同步码即可同步。本地数据始终保留。
           </p>
           <div style="display:flex; flex-direction:column; gap:12px;">
             <button class="btn btn-primary" onclick="enableSyncNew()" style="width:100%; justify-content:center; padding:14px;">
               ✨ 生成新的同步码
             </button>
-            <div style="text-align:center; font-size:12px; color:var(--text-light);">— 或在其他设备上输入已有同步码 —</div>
+            <div style="text-align:center; font-size:12px; color:var(--text-light);">— 或在其他设备输入已有同步码 —</div>
             <div class="form-group" style="margin:0;">
               <label class="form-label">输入同步码</label>
               <div style="display:flex; gap:8px;">
@@ -1043,12 +1079,12 @@
           </div>
         `;
       } else {
-        body.innerHTML = `
-          <div style="text-align:center; margin-bottom:18px;">
+        html += `
+          <div style="text-align:center; margin-bottom:14px;">
             <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">你的同步码（在其他设备输入此码即可同步）</div>
-            <div style="font-size:26px; font-weight:700; letter-spacing:3px; color:var(--primary-dark); background:var(--primary-light); padding:14px 20px; border-radius:12px; font-family:ui-monospace,monospace; user-select:all;">${code}</div>
+            <div style="font-size:24px; font-weight:700; letter-spacing:3px; color:var(--primary-dark); background:var(--primary-light); padding:12px 18px; border-radius:12px; font-family:ui-monospace,monospace; user-select:all;">${code}</div>
           </div>
-          <div id="syncStatus" style="text-align:center; font-size:12px; color:var(--text-muted); margin-bottom:16px; min-height:18px;"></div>
+          <div id="syncStatus" style="text-align:center; font-size:12px; color:var(--text-muted); margin-bottom:14px; min-height:18px;"></div>
           <div style="display:flex; gap:8px; flex-direction:column;">
             <button class="btn btn-primary" onclick="syncNow()" style="width:100%; justify-content:center;">
               ⬆️ 上传到云端
@@ -1060,15 +1096,20 @@
               断开同步
             </button>
           </div>
-          <div class="form-hint" style="margin-top:16px; line-height:1.6;">
-            💡 首次使用前：前往 <a href="https://tcb.cloud.tencent.com/dev" target="_blank" style="color:var(--secondary-dark);">云开发控制台</a> → 数据库，手动新建集合 <strong>learning_dashboard</strong>，权限选「所有用户可读写」。未创建集合时同步会失败。
-          </div>
         `;
         updateSyncStatus(cloudReady ? 'synced' : 'offline');
       }
+      html += `
+        <div class="form-hint" style="margin-top:14px; line-height:1.6;">
+          💡 首次使用前需一次性设置：控制台 → 文档型数据库 → 集合 <strong>learning_dashboard</strong> → 权限管理 → <strong>切换到安全规则</strong>，填入 <code>{"read":"true","write":"true"}</code>
+        </div>
+      `;
+      body.innerHTML = html;
     }
 
     async function enableSyncNew() {
+      const pkVal = document.getElementById('pkInput');
+      if (pkVal && pkVal.value.trim()) savePublishableKey(pkVal.value.trim());
       try {
         showToast('info', '正在连接云端...');
         await initCloudBase();
@@ -1084,6 +1125,8 @@
     }
 
     async function enableSyncExisting() {
+      const pkVal = document.getElementById('pkInput');
+      if (pkVal && pkVal.value.trim()) savePublishableKey(pkVal.value.trim());
       const input = document.getElementById('syncCodeInput');
       const code = input.value.trim().toUpperCase();
       if (!code) { showToast('error', '请输入同步码'); return; }
@@ -1989,6 +2032,7 @@
     window.syncNow = syncNow;
     window.pullSync = pullSync;
     window.disableSync = disableSync;
+    window.savePkFromInput = savePkFromInput;
 
     // ====== 初始化 ======
     renderAll();
