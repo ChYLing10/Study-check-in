@@ -209,6 +209,95 @@
     .empty-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; }
     .empty-actions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
 
+    /* 学习足迹 */
+    .footprint-card {
+      background: var(--surface); padding: 20px; border-radius: var(--radius);
+      border: 1px solid var(--border-light); box-shadow: var(--shadow-sm);
+    }
+    .footprint-stats {
+      display: flex; gap: 24px; margin-bottom: 16px; flex-wrap: wrap;
+    }
+    .footprint-stat { display: flex; flex-direction: column; }
+    .footprint-stat-value { font-size: 18px; font-weight: 700; color: var(--primary-dark); }
+    .footprint-stat-label { font-size: 11px; color: var(--text-muted); }
+
+    /* 按月日历 */
+    .calendar-stats {
+      display: flex; gap: 12px; margin-bottom: 20px; padding: 16px;
+      background: var(--border-light); border-radius: var(--radius-sm);
+    }
+    .calendar-stat { flex: 1; text-align: center; }
+    .calendar-stat-value { font-size: 20px; font-weight: 700; color: var(--primary-dark); }
+    .calendar-stat-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .month-calendar { width: 100%; }
+    .month-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .month-nav {
+      width: 38px; height: 38px; border-radius: 10px;
+      border: 1px solid var(--border); background: var(--surface);
+      cursor: pointer; font-size: 15px; color: var(--text-muted);
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s; font-family: inherit; flex-shrink: 0;
+    }
+    .month-nav:hover { background: var(--primary-light); color: var(--primary-dark); border-color: var(--primary-bg); transform: scale(1.05); }
+    .month-nav:active { transform: scale(0.95); }
+    .month-title { font-size: 16px; font-weight: 700; letter-spacing: 0.02em; }
+    .month-weekdays {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      gap: 5px; margin-bottom: 5px;
+    }
+    .month-weekdays span {
+      text-align: center; font-size: 11px; font-weight: 600;
+      color: var(--text-light); padding: 4px 0;
+    }
+    .month-grid {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
+    }
+    .month-day {
+      aspect-ratio: 1 / 1;
+      border-radius: 9px;
+      background: #f3f4f6;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      position: relative; cursor: default;
+      transition: transform 0.12s, box-shadow 0.12s;
+      min-height: 40px; padding: 2px;
+    }
+    .month-day.has-data:hover { transform: scale(1.08); box-shadow: var(--shadow-md); z-index: 2; }
+    .month-day.other-month { opacity: 0.25; }
+    .month-day.today { box-shadow: 0 0 0 2px var(--primary), 0 0 0 4px rgba(16,185,129,0.2); }
+    .month-day.future { opacity: 0.45; }
+    .day-num { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1; }
+    .day-min { font-size: 10px; color: var(--text-muted); margin-top: 2px; line-height: 1; font-weight: 500; }
+    .month-day.lv0 { background: #f3f4f6; }
+    .month-day.lv1 { background: #c6f6d5; }
+    .month-day.lv1 .day-num { color: #22543d; }
+    .month-day.lv2 { background: #68d391; }
+    .month-day.lv2 .day-num { color: #22543d; }
+    .month-day.lv3 { background: #38a169; }
+    .month-day.lv3 .day-num, .month-day.lv3 .day-min { color: white; }
+    .month-day.lv4 { background: #22543d; }
+    .month-day.lv4 .day-num, .month-day.lv4 .day-min { color: white; }
+    .month-legend {
+      display: flex; align-items: center; justify-content: flex-end;
+      gap: 5px; margin-top: 14px; font-size: 11px; color: var(--text-light);
+    }
+    .legend-cell { width: 14px; height: 14px; border-radius: 4px; }
+    .legend-cell.lv0 { background: #f3f4f6; }
+    .legend-cell.lv1 { background: #c6f6d5; }
+    .legend-cell.lv2 { background: #68d391; }
+    .legend-cell.lv3 { background: #38a169; }
+    .legend-cell.lv4 { background: #22543d; }
+    .month-empty-hint { text-align:center; font-size:12px; color:var(--text-light); padding:18px 0; }
+
+    /* 同步按钮状态点 */
+    .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-light); transition: all 0.2s; }
+    #syncBtn.active { color: var(--primary-dark); border-color: var(--primary-bg); background: var(--primary-light); }
+    #syncBtn.active .sync-dot { background: var(--primary); box-shadow: 0 0 0 3px rgba(16,185,129,0.2); }
+
     /* 成就 */
     .achievements-section { margin-bottom: 32px; }
     .badge-summary {
@@ -265,6 +354,7 @@
       padding: 24px; width: 100%; max-width: 480px; max-height: 90vh;
       overflow-y: auto; box-shadow: var(--shadow-lg); animation: slideUp 0.3s ease;
     }
+    .modal.wide { max-width: 720px; }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     @keyframes slideUp {
       from { opacity: 0; transform: translateY(20px); }
@@ -373,6 +463,10 @@
         </div>
       </div>
       <div class="actions">
+        <button class="btn" id="syncBtn" title="云端同步">
+          <span>☁️</span><span>同步</span>
+          <span class="sync-dot"></span>
+        </button>
         <button class="btn btn-secondary" id="importBtn">
           <span>📥</span><span>导入</span>
         </button>
@@ -406,6 +500,20 @@
         <div class="stat-value" id="statStreak">0</div>
         <div class="stat-label">连续学习天数</div>
         <div class="stat-status" id="todayStatus">今日还未记录</div>
+      </div>
+    </section>
+
+    <section class="courses-section" id="footprintSection" style="display:none">
+      <div class="section-header">
+        <div class="section-title">
+          <span class="icon">🗓️</span>
+          <span>学习足迹</span>
+          <span class="section-subtitle">按月查看，左右切换</span>
+        </div>
+      </div>
+      <div class="footprint-card">
+        <div class="footprint-stats" id="footprintStats"></div>
+        <div id="footprintCalendar"></div>
       </div>
     </section>
 
@@ -453,7 +561,7 @@
     </section>
 
     <footer>
-      数据保存在你的浏览器本地 · 建议定期导出备份 · 可部署到 GitHub Pages
+      数据保存在浏览器本地 · 可开启云端同步多设备共享 · 建议定期导出备份
     </footer>
   </div>
 
@@ -539,6 +647,17 @@
     </div>
   </div>
 
+  <!-- 课程学习日历模态框 -->
+  <div class="modal-overlay" id="calendarModal">
+    <div class="modal wide">
+      <div class="modal-header">
+        <div class="modal-title" id="calendarTitle">📅 学习日历</div>
+        <button class="modal-close" data-close>×</button>
+      </div>
+      <div id="calendarBody"></div>
+    </div>
+  </div>
+
   <!-- 导入模态框 -->
   <div class="modal-overlay" id="importModal">
     <div class="modal">
@@ -559,6 +678,17 @@
         <button type="button" class="btn" data-close>取消</button>
         <button type="button" class="btn btn-primary" id="confirmImport">导入</button>
       </div>
+    </div>
+  </div>
+
+  <!-- 云端同步模态框 -->
+  <div class="modal-overlay" id="syncModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">☁️ 云端同步</div>
+        <button class="modal-close" data-close>×</button>
+      </div>
+      <div id="syncBody"></div>
     </div>
   </div>
 
@@ -601,7 +731,6 @@
         if (data) {
           const parsed = JSON.parse(data);
           const merged = { ...getDefaultState(), ...parsed };
-          // 数据迁移：旧版本用 lessonDuration，新版本改用 totalMinutes
           merged.courses = (merged.courses || []).map(c => {
             if (c.totalMinutes === undefined) {
               const dur = c.lessonDuration || 30;
@@ -619,11 +748,310 @@
     }
 
     function saveState() {
+      state._updatedAt = Date.now();
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
       } catch (e) {
         showToast('error', '保存失败', '数据无法保存到浏览器');
       }
+      scheduleCloudPush();
+    }
+
+    // ====== 云端同步（CloudBase 文档数据库，无需 accessKey）======
+    const CLOUDBASE_ENV = 'chyling10-d6g1xf7zjecfa9d38';
+    const SYNC_CODE_KEY = 'learning_dashboard_sync_code';
+    const SYNC_COLLECTION = 'learning_dashboard';
+    const TCB_SDK_URL = 'https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js';
+    let cloudApp = null;
+    let cloudDb = null;
+    let cloudReady = false;
+    let syncPushTimer = null;
+
+    function getSyncCode() {
+      return localStorage.getItem(SYNC_CODE_KEY);
+    }
+
+    function generateSyncCode() {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // 去除易混淆字符
+      let code = '';
+      for (let i = 0; i < 8; i++) {
+        code += chars[Math.floor(Math.random() * chars.length)];
+        if (i === 3) code += '-';
+      }
+      return code; // 形如 ABCD-EFGH
+    }
+
+    function loadCloudBaseSDK() {
+      if (window.cloudbase) return Promise.resolve(window.cloudbase);
+      return new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = TCB_SDK_URL;
+        s.onload = () => window.cloudbase ? resolve(window.cloudbase) : reject(new Error('SDK 加载失败'));
+        s.onerror = () => reject(new Error('无法连接到云开发服务，请检查网络'));
+        document.head.appendChild(s);
+      });
+    }
+
+    async function initCloudBase() {
+      if (cloudReady) return;
+      const cloudbase = await loadCloudBaseSDK();
+      cloudApp = cloudbase.init({ env: CLOUDBASE_ENV });
+      const auth = typeof cloudApp.auth === 'function' ? cloudApp.auth() : cloudApp.auth;
+      if (auth && typeof auth.signInAnonymously === 'function') {
+        await auth.signInAnonymously();
+      } else if (auth && auth.anonymousAuthProvider) {
+        const provider = typeof auth.anonymousAuthProvider === 'function' ? auth.anonymousAuthProvider() : auth.anonymousAuthProvider;
+        if (provider && typeof provider.signIn === 'function') await provider.signIn();
+      }
+      cloudDb = cloudApp.database();
+      cloudReady = true;
+    }
+
+    async function cloudGet(code) {
+      const coll = cloudDb.collection(SYNC_COLLECTION);
+      try {
+        const res = await coll.doc(code).get();
+        if (res && res.data) {
+          if (Array.isArray(res.data)) return res.data.length > 0 ? res.data[0] : null;
+          return res.data;
+        }
+      } catch (e) { return null; }
+      return null;
+    }
+
+    async function cloudUpsert(code, payload) {
+      const coll = cloudDb.collection(SYNC_COLLECTION);
+      try {
+        await coll.doc(code).set({ data: payload });
+      } catch (e) {
+        try { await coll.add({ _id: code, ...payload }); }
+        catch (e2) { await coll.doc(code).update({ data: payload }); }
+      }
+    }
+
+    async function pushToCloud() {
+      if (!cloudReady) return;
+      const code = getSyncCode();
+      if (!code) return;
+      const payload = {
+        courses: state.courses,
+        studyLogs: state.studyLogs,
+        unlockedAchievements: state.unlockedAchievements,
+        _updatedAt: state._updatedAt || Date.now()
+      };
+      try {
+        await cloudUpsert(code, payload);
+        updateSyncStatus('synced');
+      } catch (e) {
+        updateSyncStatus('error');
+        throw e;
+      }
+    }
+
+    function scheduleCloudPush() {
+      if (!cloudReady || !getSyncCode()) return;
+      clearTimeout(syncPushTimer);
+      syncPushTimer = setTimeout(() => { pushToCloud().catch(() => {}); }, 2000);
+    }
+
+    async function pullFromCloud() {
+      if (!cloudReady) return null;
+      const code = getSyncCode();
+      if (!code) return null;
+      return await cloudGet(code);
+    }
+
+    function applyCloudData(cloudData, silent) {
+      if (!cloudData) return;
+      if (Array.isArray(cloudData.courses)) state.courses = cloudData.courses;
+      if (Array.isArray(cloudData.studyLogs)) state.studyLogs = cloudData.studyLogs;
+      if (Array.isArray(cloudData.unlockedAchievements)) state.unlockedAchievements = cloudData.unlockedAchievements;
+      if (cloudData._updatedAt) state._updatedAt = cloudData._updatedAt;
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+      renderAll();
+      checkAchievements();
+      renderAchievements();
+      if (!silent) showToast('success', '已从云端拉取最新数据');
+    }
+
+    async function initSyncOnLoad() {
+      const code = getSyncCode();
+      updateSyncButton();
+      if (!code) return;
+      try {
+        await initCloudBase();
+        const cloudData = await pullFromCloud();
+        const localTime = state._updatedAt || 0;
+        const cloudTime = (cloudData && cloudData._updatedAt) || 0;
+        if (cloudData && cloudTime > localTime) {
+          applyCloudData(cloudData, true);
+          showToast('info', '已同步云端最新数据', '如需保留本设备旧数据，请先导出备份');
+        } else {
+          await pushToCloud();
+        }
+        updateSyncButton();
+      } catch (e) {
+        console.error('启动同步失败:', e);
+        updateSyncStatus('error');
+      }
+    }
+
+    function handleSyncError(e) {
+      console.error('同步错误:', e);
+      const msg = (e && e.message) ? String(e.message) : '未知错误';
+      if (/权限|permission|PERMISSION|denied|403|无权|未授权/i.test(msg)) {
+        showToast('error', '权限不足', '请在云开发控制台 → 数据库 → learning_dashboard 集合 → 权限设置，选择「所有用户可读写」');
+      } else if (/网络|network|connect|timeout|无法连接/i.test(msg)) {
+        showToast('error', '网络错误', '请检查网络连接后重试');
+      } else {
+        showToast('error', '同步失败', msg);
+      }
+    }
+
+    function updateSyncStatus(status) {
+      const el = document.getElementById('syncStatus');
+      if (!el) return;
+      const map = {
+        synced: '🟢 已连接云端',
+        offline: '⚪ 未连接',
+        error: '🔴 同步出错，请查看提示',
+        syncing: '🔄 同步中...'
+      };
+      el.textContent = map[status] || '';
+    }
+
+    function updateSyncButton() {
+      const btn = document.getElementById('syncBtn');
+      if (!btn) return;
+      if (getSyncCode()) btn.classList.add('active');
+      else btn.classList.remove('active');
+    }
+
+    function openSyncModal() {
+      document.getElementById('syncModal').classList.add('active');
+      renderSyncModal();
+    }
+
+    function renderSyncModal() {
+      const body = document.getElementById('syncBody');
+      const code = getSyncCode();
+      if (!code) {
+        body.innerHTML = `
+          <p style="font-size:13px; color:var(--text-muted); margin-bottom:18px; line-height:1.7;">
+            开启云端同步后，学习数据会保存到云端。<strong>在其他手机或电脑打开本页面，输入同一个同步码</strong>即可同步。<br>
+            本地数据始终保留，断网也能正常使用。
+          </p>
+          <div style="display:flex; flex-direction:column; gap:12px;">
+            <button class="btn btn-primary" onclick="enableSyncNew()" style="width:100%; justify-content:center; padding:14px;">
+              ✨ 生成新的同步码
+            </button>
+            <div style="text-align:center; font-size:12px; color:var(--text-light);">— 或在其他设备上输入已有同步码 —</div>
+            <div class="form-group" style="margin:0;">
+              <label class="form-label">输入同步码</label>
+              <div style="display:flex; gap:8px;">
+                <input type="text" class="form-input" id="syncCodeInput" placeholder="如 ABCD-EFGH" style="text-transform:uppercase; flex:1; letter-spacing:2px;" maxlength="9">
+                <button class="btn btn-secondary" onclick="enableSyncExisting()">连接</button>
+              </div>
+            </div>
+          </div>
+        `;
+      } else {
+        body.innerHTML = `
+          <div style="text-align:center; margin-bottom:18px;">
+            <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">你的同步码（在其他设备输入此码即可同步）</div>
+            <div style="font-size:26px; font-weight:700; letter-spacing:3px; color:var(--primary-dark); background:var(--primary-light); padding:14px 20px; border-radius:12px; font-family:ui-monospace,monospace; user-select:all;">${code}</div>
+          </div>
+          <div id="syncStatus" style="text-align:center; font-size:12px; color:var(--text-muted); margin-bottom:16px; min-height:18px;"></div>
+          <div style="display:flex; gap:8px; flex-direction:column;">
+            <button class="btn btn-primary" onclick="syncNow()" style="width:100%; justify-content:center;">
+              ⬆️ 上传到云端
+            </button>
+            <button class="btn btn-secondary" onclick="pullSync()" style="width:100%; justify-content:center;">
+              ⬇️ 从云端拉取（覆盖本地）
+            </button>
+            <button class="btn" onclick="disableSync()" style="width:100%; justify-content:center; color:var(--danger);">
+              断开同步
+            </button>
+          </div>
+          <div class="form-hint" style="margin-top:16px; line-height:1.6;">
+            💡 首次使用若提示「权限不足」：请前往 <a href="https://tcb.cloud.tencent.com/dev" target="_blank" style="color:var(--secondary-dark);">云开发控制台</a> → 数据库 → learning_dashboard 集合 → 权限设置，选择「所有用户可读写」
+          </div>
+        `;
+        updateSyncStatus(cloudReady ? 'synced' : 'offline');
+      }
+    }
+
+    async function enableSyncNew() {
+      try {
+        showToast('info', '正在连接云端...');
+        await initCloudBase();
+        const code = generateSyncCode();
+        localStorage.setItem(SYNC_CODE_KEY, code);
+        await pushToCloud();
+        showToast('success', '同步已开启', `同步码：${code}，请在其他设备输入`);
+        renderSyncModal();
+        updateSyncButton();
+      } catch (e) {
+        handleSyncError(e);
+      }
+    }
+
+    async function enableSyncExisting() {
+      const input = document.getElementById('syncCodeInput');
+      const code = input.value.trim().toUpperCase();
+      if (!code) { showToast('error', '请输入同步码'); return; }
+      try {
+        showToast('info', '正在连接云端...');
+        await initCloudBase();
+        localStorage.setItem(SYNC_CODE_KEY, code);
+        const cloudData = await pullFromCloud();
+        if (!cloudData || !cloudData.courses) {
+          localStorage.removeItem(SYNC_CODE_KEY);
+          showToast('error', '未找到数据', '该同步码暂无数据，请核对或在本设备生成新码');
+          updateSyncButton();
+          return;
+        }
+        applyCloudData(cloudData, true);
+        showToast('success', '同步已开启', '已从云端拉取最新数据');
+        renderSyncModal();
+        updateSyncButton();
+      } catch (e) {
+        localStorage.removeItem(SYNC_CODE_KEY);
+        handleSyncError(e);
+      }
+    }
+
+    async function syncNow() {
+      try {
+        updateSyncStatus('syncing');
+        await pushToCloud();
+        showToast('success', '上传成功', '数据已同步到云端');
+      } catch (e) {
+        handleSyncError(e);
+      }
+    }
+
+    async function pullSync() {
+      if (!confirm('从云端拉取将覆盖本设备当前数据，是否继续？')) return;
+      try {
+        updateSyncStatus('syncing');
+        const cloudData = await pullFromCloud();
+        if (!cloudData || !cloudData.courses) { showToast('error', '云端暂无数据'); updateSyncStatus('error'); return; }
+        applyCloudData(cloudData, true);
+        showToast('success', '拉取成功', '已更新为云端数据');
+        renderSyncModal();
+      } catch (e) {
+        handleSyncError(e);
+      }
+    }
+
+    function disableSync() {
+      if (!confirm('断开同步后，本设备不再自动上传数据，云端数据保留。是否继续？')) return;
+      localStorage.removeItem(SYNC_CODE_KEY);
+      cloudReady = false; cloudApp = null; cloudDb = null;
+      showToast('info', '已断开同步', '本地数据不受影响');
+      renderSyncModal();
+      updateSyncButton();
     }
 
     // ====== 工具函数 ======
@@ -633,7 +1061,6 @@
 
     function pad(n) { return String(n).padStart(2, '0'); }
 
-    // 把任意数值四舍五入到 2 位小数，避免浮点累加误差
     function round2(n) { return Math.round((Number(n) || 0) * 100) / 100; }
 
     function formatDate(dateStr) {
@@ -654,13 +1081,16 @@
       return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
     }
 
+    function dateToStr(d) {
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    }
+
     function escapeHtml(text) {
       const div = document.createElement('div');
       div.textContent = text == null ? '' : String(text);
       return div.innerHTML;
     }
 
-    // 课程是否已完成：完全由课时推导，不依赖独立 completed 字段
     function isCourseCompleted(course) {
       return (Number(course.completedLessons) || 0) + EPS >= (Number(course.totalLessons) || 0);
     }
@@ -671,13 +1101,9 @@
       if (dates.length === 0) return 0;
       const today = todayStr();
       const yesterday = shiftDateStr(today, -1);
-
-      // 如果今天或昨天没有学习记录，连续天数视为 0
       if (!dates.includes(today) && !dates.includes(yesterday)) return 0;
-
       let streak = 0;
       let checkDate = dates.includes(today) ? today : yesterday;
-
       while (dates.includes(checkDate)) {
         streak++;
         checkDate = shiftDateStr(checkDate, -1);
@@ -700,6 +1126,151 @@
       const total = Number(course.totalLessons) || 0;
       if (total === 0) return 0;
       return Math.min(100, Math.round(((Number(course.completedLessons) || 0) / total) * 100));
+    }
+
+    // ====== 热力图数据 ======
+    // 汇总每日学习分钟数；传 courseId 则只统计该课程
+    function getMinutesMap(courseId) {
+      const map = {};
+      state.studyLogs.forEach(l => {
+        if (courseId && l.courseId !== courseId) return;
+        map[l.date] = (map[l.date] || 0) + (Number(l.minutes) || 0);
+      });
+      return map;
+    }
+
+    function getLevel(minutes) {
+      if (minutes <= 0) return 0;
+      if (minutes < 30) return 1;
+      if (minutes < 60) return 2;
+      if (minutes < 120) return 3;
+      return 4;
+    }
+
+    // 某天学了哪些课（全局 tooltip 用）
+    function getDayCourseNames(date) {
+      const names = [...new Set(state.studyLogs.filter(l => l.date === date).map(l => l.courseName))];
+      return names;
+    }
+
+    // ====== 按月日历 ======
+    let calendarModalView = { year: new Date().getFullYear(), month: new Date().getMonth() };
+    let calendarModalCourseId = null;
+    let footprintView = { year: new Date().getFullYear(), month: new Date().getMonth() };
+    const MONTH_NAMES = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+
+    function shiftView(view, delta) {
+      view.month += delta;
+      if (view.month < 0) { view.month = 11; view.year--; }
+      else if (view.month > 11) { view.month = 0; view.year++; }
+    }
+
+    // 渲染单月日历：周一为首日，颜色深浅表示当天学习时长
+    function renderMonthCalendar(view, courseId, containerId) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      const { year, month } = view;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const minutesMap = getMinutesMap(courseId);
+
+      const firstDay = new Date(year, month, 1);
+      const firstWeekday = (firstDay.getDay() + 6) % 7; // 0=周一
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const prevLastDay = new Date(year, month, 0).getDate();
+
+      let cells = '';
+      // 上月尾部补齐
+      for (let i = firstWeekday - 1; i >= 0; i--) {
+        cells += `<div class="month-day other-month"><span class="day-num">${prevLastDay - i}</span></div>`;
+      }
+      // 当月每天
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = `${year}-${pad(month + 1)}-${pad(d)}`;
+        const cellDate = new Date(year, month, d);
+        cellDate.setHours(0, 0, 0, 0);
+        const minutes = minutesMap[dateStr] || 0;
+        const level = getLevel(minutes);
+        const isToday = cellDate.getTime() === today.getTime();
+        const isFuture = cellDate > today;
+        let classes = 'month-day';
+        if (minutes > 0) classes += ' has-data';
+        if (isFuture) classes += ' future';
+        if (isToday) classes += ' today';
+        classes += ' lv' + level;
+        let title;
+        if (minutes > 0) {
+          if (courseId) {
+            title = `${dateStr} · 学习 ${minutes} 分钟`;
+          } else {
+            const names = getDayCourseNames(dateStr);
+            title = `${dateStr} · ${minutes} 分钟 · ${names.join('、')}`;
+          }
+        } else if (isFuture) {
+          title = `${dateStr} · 未来`;
+        } else {
+          title = `${dateStr} · 未学习`;
+        }
+        const minText = minutes > 0 ? `<span class="day-min">${minutes}分</span>` : '';
+        cells += `<div class="${classes}" title="${escapeHtml(title)}"><span class="day-num">${d}</span>${minText}</div>`;
+      }
+      // 下月头部补齐至完整周
+      const totalCells = firstWeekday + daysInMonth;
+      const remaining = (7 - (totalCells % 7)) % 7;
+      for (let d = 1; d <= remaining; d++) {
+        cells += `<div class="month-day other-month"><span class="day-num">${d}</span></div>`;
+      }
+
+      const hasAnyThisMonth = Object.keys(minutesMap).some(ds => ds.startsWith(`${year}-${pad(month + 1)}-`));
+
+      container.innerHTML = `
+        <div class="month-calendar">
+          <div class="month-header">
+            <button class="month-nav" onclick="navigateMonth('${containerId}', -1)" title="上个月">◀</button>
+            <div class="month-title">${year}年${MONTH_NAMES[month]}</div>
+            <button class="month-nav" onclick="navigateMonth('${containerId}', 1)" title="下个月">▶</button>
+          </div>
+          <div class="month-weekdays">
+            <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
+          </div>
+          <div class="month-grid">${cells}</div>
+          ${hasAnyThisMonth ? '' : '<div class="month-empty-hint">本月暂无学习记录</div>'}
+          <div class="month-legend">
+            <span>少</span>
+            <div class="legend-cell lv0"></div>
+            <div class="legend-cell lv1"></div>
+            <div class="legend-cell lv2"></div>
+            <div class="legend-cell lv3"></div>
+            <div class="legend-cell lv4"></div>
+            <span>多</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function navigateMonth(containerId, delta) {
+      if (containerId === 'calendarBodyGrid') {
+        shiftView(calendarModalView, delta);
+        renderMonthCalendar(calendarModalView, calendarModalCourseId, 'calendarBodyGrid');
+      } else if (containerId === 'footprintCalendar') {
+        shiftView(footprintView, delta);
+        renderMonthCalendar(footprintView, null, 'footprintCalendar');
+      }
+    }
+
+    // 计算某课程/全局的统计：学习天数、总时长、最长连续
+    function calcStats(courseId) {
+      const logs = courseId ? state.studyLogs.filter(l => l.courseId === courseId) : state.studyLogs;
+      const dates = [...new Set(logs.map(l => l.date))].sort();
+      const minutes = logs.reduce((s, l) => s + (Number(l.minutes) || 0), 0);
+      let maxStreak = 0, cur = 0, prev = null;
+      dates.forEach(d => {
+        if (prev && shiftDateStr(prev, 1) === d) cur++;
+        else cur = 1;
+        if (cur > maxStreak) maxStreak = cur;
+        prev = d;
+      });
+      return { days: dates.length, minutes, maxStreak };
     }
 
     // ====== 成就检测（动态：解锁 + 重新锁定）======
@@ -728,7 +1299,6 @@
         lessons_100:      stats.completedLessons >= 100
       };
 
-      // 1. 新解锁
       const newlyUnlocked = [];
       Object.keys(conditions).forEach(id => {
         if (conditions[id] && !state.unlockedAchievements.includes(id)) {
@@ -737,14 +1307,12 @@
         }
       });
 
-      // 2. 重新锁定：不再满足条件的从已解锁列表移除（静默处理，不弹 toast）
       const beforeLen = state.unlockedAchievements.length;
       state.unlockedAchievements = state.unlockedAchievements.filter(id => conditions[id]);
       const changed = newlyUnlocked.length > 0 || state.unlockedAchievements.length !== beforeLen;
 
       if (changed) saveState();
 
-      // 新解锁才弹祝贺 toast
       newlyUnlocked.forEach(id => {
         const ach = ACHIEVEMENTS.find(a => a.id === id);
         if (ach) {
@@ -776,6 +1344,32 @@
         statusEl.textContent = '今日还未记录';
         statusEl.className = 'stat-status';
       }
+    }
+
+    function renderFootprint() {
+      const section = document.getElementById('footprintSection');
+      if (state.studyLogs.length === 0) {
+        section.style.display = 'none';
+        return;
+      }
+      section.style.display = '';
+      const stats = calcStats(null);
+      document.getElementById('footprintStats').innerHTML = `
+        <div class="footprint-stat">
+          <div class="footprint-stat-value">${stats.days}</div>
+          <div class="footprint-stat-label">学习天数</div>
+        </div>
+        <div class="footprint-stat">
+          <div class="footprint-stat-value">${(stats.minutes / 60).toFixed(1)}h</div>
+          <div class="footprint-stat-label">总时长</div>
+        </div>
+        <div class="footprint-stat">
+          <div class="footprint-stat-value">${stats.maxStreak}</div>
+          <div class="footprint-stat-label">最长连续</div>
+        </div>
+      `;
+      const minutesMap = getMinutesMap(null);
+      renderMonthCalendar(footprintView, null, 'footprintCalendar');
     }
 
     function renderActiveCourses() {
@@ -871,6 +1465,7 @@
           </div>
           <div class="course-actions">
             ${!completed ? `<button class="icon-btn primary" onclick="openRecordModal('${course.id}')" title="记录今天的学习">📝 记录学习</button>` : ''}
+            <button class="icon-btn" onclick="openCalendarModal('${course.id}')" title="查看该课程的学习日历">📅 日历</button>
             ${!completed ? `<button class="icon-btn" onclick="completeCourse('${course.id}')" title="跳过逐次记录，直接标记整门课为已完成">✓ 标记结业</button>` : ''}
             ${completed ? `<button class="icon-btn secondary" onclick="reactivateCourse('${course.id}')" title="课程回到在学状态">↩ 恢复在学</button>` : ''}
             <button class="icon-btn" onclick="editCourse('${course.id}')" title="编辑课程">✏️ 编辑</button>
@@ -906,6 +1501,7 @@
 
     function renderAll() {
       renderOverview();
+      renderFootprint();
       renderActiveCourses();
       renderCompletedCourses();
       renderAchievements();
@@ -1081,26 +1677,24 @@
       showToast('success', '🎉 课程已结业', `「${course.name}」标记为已完成`);
     }
 
-    // 恢复在学：把课时回退一点，避免立刻又被判定为已完成
     function reactivateCourse(courseId) {
       const course = state.courses.find(c => c.id === courseId);
       if (!course) return;
       const total = Number(course.totalLessons) || 0;
-      // 回退 1 课时（若总课时较小则回退 0.1），保底 0
       const stepBack = total > 1 ? 1 : 0.1;
       const before = Number(course.completedLessons) || 0;
-      course.completedLessons = round2(Math.max(0, total - stepBack));
+      const after = round2(Math.max(0, total - stepBack));
 
-      if (!confirm(`将「${course.name}」恢复为在学状态？\n（课时从 ${before} 回退到 ${course.completedLessons}，可在编辑中继续调整）`)) {
-        // 用户取消，不保存
+      if (!confirm(`将「${course.name}」恢复为在学状态？\n（课时从 ${before} 回退到 ${after}，可在编辑中继续调整）`)) {
         return;
       }
 
+      course.completedLessons = after;
       saveState();
       renderAll();
       checkAchievements();
       renderAchievements();
-      showToast('info', '已恢复在学', `课时已回退到 ${course.completedLessons}，可继续记录学习`);
+      showToast('info', '已恢复在学', `课时已回退到 ${after}，可继续记录学习`);
     }
 
     function deleteCourse(courseId) {
@@ -1108,7 +1702,6 @@
       if (!course) return;
       if (!confirm(`确定要删除「${course.name}」吗？此操作无法撤销。`)) return;
       state.courses = state.courses.filter(c => c.id !== courseId);
-      // 同时清理该课程的学习记录
       state.studyLogs = state.studyLogs.filter(l => l.courseId !== courseId);
       saveState();
       renderAll();
@@ -1119,13 +1712,43 @@
 
     function editCourse(courseId) { openCourseModal(courseId); }
 
+    // ====== 课程学习日历 ======
+    function openCalendarModal(courseId) {
+      const course = state.courses.find(c => c.id === courseId);
+      if (!course) return;
+      calendarModalCourseId = courseId;
+      calendarModalView = { year: new Date().getFullYear(), month: new Date().getMonth() };
+      const stats = calcStats(courseId);
+      document.getElementById('calendarTitle').textContent = `📅 ${course.name}`;
+      document.getElementById('calendarBody').innerHTML = `
+        <div class="calendar-stats">
+          <div class="calendar-stat">
+            <div class="calendar-stat-value">${stats.days}</div>
+            <div class="calendar-stat-label">学习天数</div>
+          </div>
+          <div class="calendar-stat">
+            <div class="calendar-stat-value">${(stats.minutes / 60).toFixed(1)}h</div>
+            <div class="calendar-stat-label">总时长</div>
+          </div>
+          <div class="calendar-stat">
+            <div class="calendar-stat-value">${stats.maxStreak}</div>
+            <div class="calendar-stat-label">最长连续</div>
+          </div>
+        </div>
+        <div id="calendarBodyGrid"></div>
+        <div class="form-hint" style="margin-top:14px; text-align:center;">点击 ◀ ▶ 切换月份 · 颜色深浅表示当天学习时长</div>
+      `;
+      renderMonthCalendar(calendarModalView, courseId, 'calendarBodyGrid');
+      document.getElementById('calendarModal').classList.add('active');
+    }
+
     // ====== 导入导出 ======
     function exportData() {
       if (state.courses.length === 0 && state.studyLogs.length === 0) {
         showToast('info', '暂无数据', '请先添加课程或记录学习');
         return;
       }
-      const data = { ...state, exportedAt: new Date().toISOString(), version: '1.2' };
+      const data = { ...state, exportedAt: new Date().toISOString(), version: '1.3' };
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -1200,12 +1823,17 @@
         studyLogs: [],
         unlockedAchievements: []
       };
-      // 生成最近 7 天的学习日志（模拟真实的学习节奏）
-      for (let i = 6; i >= 0; i--) {
+      // 生成最近 3 个月的学习日志（让热力图更丰满）
+      for (let i = 90; i >= 0; i--) {
         const d = shiftDateStr(today, -i);
-        state.studyLogs.push({ id: uuid(), date: d, courseId: c1.id, courseName: c1.name, minutes: 45, lessons: 0.5 });
-        if (i % 2 === 0) {
-          state.studyLogs.push({ id: uuid(), date: d, courseId: c2.id, courseName: c2.name, minutes: 30, lessons: 0.5 });
+        // 约 70% 的天有学习
+        if (Math.random() > 0.3) {
+          const m1 = 30 + Math.floor(Math.random() * 60);
+          state.studyLogs.push({ id: uuid(), date: d, courseId: c1.id, courseName: c1.name, minutes: m1, lessons: round2(m1 / 60) });
+          if (Math.random() > 0.5) {
+            const m2 = 20 + Math.floor(Math.random() * 40);
+            state.studyLogs.push({ id: uuid(), date: d, courseId: c2.id, courseName: c2.name, minutes: m2, lessons: round2(m2 / 60) });
+          }
         }
       }
 
@@ -1221,6 +1849,7 @@
     document.getElementById('exportBtn').addEventListener('click', exportData);
     document.getElementById('importBtn').addEventListener('click', openImportModal);
     document.getElementById('confirmImport').addEventListener('click', confirmImport);
+    document.getElementById('syncBtn').addEventListener('click', openSyncModal);
     document.getElementById('courseForm').addEventListener('submit', handleCourseSubmit);
     document.getElementById('recordForm').addEventListener('submit', handleRecordSubmit);
 
@@ -1243,14 +1872,23 @@
     window.editCourse = editCourse;
     window.deleteCourse = deleteCourse;
     window.openRecordModal = openRecordModal;
+    window.openCalendarModal = openCalendarModal;
     window.completeCourse = completeCourse;
     window.reactivateCourse = reactivateCourse;
     window.loadSampleData = loadSampleData;
+    window.navigateMonth = navigateMonth;
+    window.openSyncModal = openSyncModal;
+    window.enableSyncNew = enableSyncNew;
+    window.enableSyncExisting = enableSyncExisting;
+    window.syncNow = syncNow;
+    window.pullSync = pullSync;
+    window.disableSync = disableSync;
 
     // ====== 初始化 ======
     renderAll();
     checkAchievements();
     renderAchievements();
+    initSyncOnLoad(); // 若已开启同步，后台拉取/推送
   </script>
 </body>
 </html>
