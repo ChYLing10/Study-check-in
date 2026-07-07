@@ -293,10 +293,32 @@
     .legend-cell.lv4 { background: #22543d; }
     .month-empty-hint { text-align:center; font-size:12px; color:var(--text-light); padding:18px 0; }
 
-    /* 同步按钮状态点 */
-    .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-light); transition: all 0.2s; }
-    #syncBtn.active { color: var(--primary-dark); border-color: var(--primary-bg); background: var(--primary-light); }
-    #syncBtn.active .sync-dot { background: var(--primary); box-shadow: 0 0 0 3px rgba(16,185,129,0.2); }
+    /* 更多菜单 */
+    .menu-wrap { position: relative; }
+    .menu-dropdown {
+      display: none; position: absolute; right: 0; top: calc(100% + 6px);
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); box-shadow: var(--shadow-lg);
+      min-width: 190px; padding: 6px; z-index: 100;
+    }
+    .menu-dropdown.open { display: flex; flex-direction: column; gap: 2px; }
+    .menu-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border: none; background: transparent;
+      cursor: pointer; border-radius: 8px; font-size: 14px;
+      color: var(--text); text-align: left; width: 100%; font-family: inherit;
+    }
+    .menu-item:hover { background: var(--border-light); }
+    .menu-item.active { color: var(--primary-dark); background: var(--primary-light); }
+    .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-light); transition: all 0.2s; margin-left: auto; }
+    .menu-item.active .sync-dot { background: var(--primary); box-shadow: 0 0 0 3px rgba(16,185,129,0.2); }
+
+    /* 可折叠区块 */
+    .section-header.collapsible { cursor: pointer; user-select: none; transition: color 0.2s; }
+    .section-header.collapsible:hover .section-title { color: var(--primary-dark); }
+    .chevron { font-size: 13px; color: var(--text-muted); transition: transform 0.25s; flex-shrink: 0; }
+    .courses-section.collapsed .chevron { transform: rotate(-90deg); }
+    .courses-section.collapsed .section-body { display: none; }
 
     /* 成就 */
     .achievements-section { margin-bottom: 32px; }
@@ -463,16 +485,23 @@
         </div>
       </div>
       <div class="actions">
-        <button class="btn" id="syncBtn" title="云端同步">
-          <span>☁️</span><span>同步</span>
-          <span class="sync-dot"></span>
-        </button>
-        <button class="btn btn-secondary" id="importBtn">
-          <span>📥</span><span>导入</span>
-        </button>
-        <button class="btn" id="exportBtn">
-          <span>📤</span><span>导出</span>
-        </button>
+        <div class="menu-wrap">
+          <button class="btn" id="moreBtn" title="更多操作">
+            <span>⋯</span><span>更多</span>
+          </button>
+          <div class="menu-dropdown" id="moreMenu">
+            <button class="menu-item" id="menuSyncBtn">
+              <span>☁️</span><span>云端同步</span>
+              <span class="sync-dot"></span>
+            </button>
+            <button class="menu-item" id="menuImportBtn">
+              <span>📥</span><span>导入数据</span>
+            </button>
+            <button class="menu-item" id="menuExportBtn">
+              <span>📤</span><span>导出数据</span>
+            </button>
+          </div>
+        </div>
         <button class="btn btn-primary" id="addCourseBtn">
           <span>＋</span><span>添加课程</span>
         </button>
@@ -504,16 +533,19 @@
     </section>
 
     <section class="courses-section" id="footprintSection" style="display:none">
-      <div class="section-header">
+      <div class="section-header collapsible" id="footprintToggle">
         <div class="section-title">
           <span class="icon">🗓️</span>
           <span>学习足迹</span>
-          <span class="section-subtitle">按月查看，左右切换</span>
+          <span class="section-subtitle">按月查看，左右切换 · 点击展开/收起</span>
         </div>
+        <span class="chevron">▾</span>
       </div>
-      <div class="footprint-card">
-        <div class="footprint-stats" id="footprintStats"></div>
-        <div id="footprintCalendar"></div>
+      <div class="section-body">
+        <div class="footprint-card">
+          <div class="footprint-stats" id="footprintStats"></div>
+          <div id="footprintCalendar"></div>
+        </div>
       </div>
     </section>
 
@@ -840,6 +872,7 @@
         _updatedAt: state._updatedAt || Date.now()
       };
       try {
+        await ensureCollection();
         await cloudUpsert(code, payload);
         updateSyncStatus('synced');
       } catch (e) {
@@ -896,16 +929,44 @@
       }
     }
 
+    let collectionEnsured = false;
+    async function ensureCollection() {
+      if (collectionEnsured || !cloudDb) return;
+      collectionEnsured = true;
+      try { await cloudDb.createCollection(SYNC_COLLECTION); }
+      catch (e) { console.warn('自动建集合失败（若已存在可忽略）:', e); }
+    }
+
+    function describeCloudError(e) {
+      const code = e && (e.code || e.errCode) ? String(e.code || e.errCode) : '';
+      let msg = e && e.message ? String(e.message) : '';
+      if (!msg && typeof e === 'string') msg = e;
+      if (!msg) { try { msg = JSON.stringify(e); } catch (_) { msg = '未知错误'; } }
+      const reqId = e && e.requestId ? String(e.requestId) : '';
+      return { code, msg, reqId };
+    }
+
     function handleSyncError(e) {
+      const { code, msg, reqId } = describeCloudError(e);
       console.error('同步错误:', e);
-      const msg = (e && e.message) ? String(e.message) : '未知错误';
-      if (/权限|permission|PERMISSION|denied|403|无权|未授权/i.test(msg)) {
-        showToast('error', '权限不足', '请在云开发控制台 → 数据库 → learning_dashboard 集合 → 权限设置，选择「所有用户可读写」');
-      } else if (/网络|network|connect|timeout|无法连接/i.test(msg)) {
-        showToast('error', '网络错误', '请检查网络连接后重试');
-      } else {
-        showToast('error', '同步失败', msg);
+      const hay = (code + ' ' + msg).toLowerCase();
+      let title = '同步失败';
+      let desc = code ? `[${code}] ${msg}` : (msg || '未知错误');
+      if (/权限|permission|denied|403|无权|未授权|database_permission/.test(hay)) {
+        title = '权限不足';
+        desc = '请在云开发控制台 → 数据库 → learning_dashboard 集合 → 权限设置，选择「所有用户可读写」';
+      } else if (/collection|集合|not exist|不存在|database_collection/.test(hay)) {
+        title = '集合不存在';
+        desc = '请在云开发控制台 → 数据库，手动新建集合 learning_dashboard，权限选「所有用户可读写」';
+      } else if (/网络|network|connect|timeout|无法连接|etimedout|enetunreach|fetch failed/.test(hay)) {
+        title = '网络错误';
+        desc = '请检查网络连接后重试';
+      } else if (/not a function|undefined is not|database is not|realtime/.test(hay)) {
+        title = '环境不支持';
+        desc = '该环境可能为 PG 模式，不支持文档数据库。请把完整报错发我，我来换方案';
       }
+      if (reqId && desc.length < 90) desc += `（请求ID: ${reqId.slice(0, 12)}）`;
+      showToast('error', title, desc);
     }
 
     function updateSyncStatus(status) {
@@ -921,7 +982,7 @@
     }
 
     function updateSyncButton() {
-      const btn = document.getElementById('syncBtn');
+      const btn = document.getElementById('menuSyncBtn');
       if (!btn) return;
       if (getSyncCode()) btn.classList.add('active');
       else btn.classList.remove('active');
@@ -974,7 +1035,7 @@
             </button>
           </div>
           <div class="form-hint" style="margin-top:16px; line-height:1.6;">
-            💡 首次使用若提示「权限不足」：请前往 <a href="https://tcb.cloud.tencent.com/dev" target="_blank" style="color:var(--secondary-dark);">云开发控制台</a> → 数据库 → learning_dashboard 集合 → 权限设置，选择「所有用户可读写」
+            💡 首次使用前：前往 <a href="https://tcb.cloud.tencent.com/dev" target="_blank" style="color:var(--secondary-dark);">云开发控制台</a> → 数据库，手动新建集合 <strong>learning_dashboard</strong>，权限选「所有用户可读写」。未创建集合时同步会失败。
           </div>
         `;
         updateSyncStatus(cloudReady ? 'synced' : 'offline');
@@ -1211,7 +1272,7 @@
         } else {
           title = `${dateStr} · 未学习`;
         }
-        const minText = minutes > 0 ? `<span class="day-min">${minutes}分</span>` : '';
+        const minText = minutes > 0 ? `<span class="day-min">${minutes}min</span>` : '';
         cells += `<div class="${classes}" title="${escapeHtml(title)}"><span class="day-num">${d}</span>${minText}</div>`;
       }
       // 下月头部补齐至完整周
@@ -1846,12 +1907,31 @@
 
     // ====== 事件绑定 ======
     document.getElementById('addCourseBtn').addEventListener('click', () => openCourseModal());
-    document.getElementById('exportBtn').addEventListener('click', exportData);
-    document.getElementById('importBtn').addEventListener('click', openImportModal);
     document.getElementById('confirmImport').addEventListener('click', confirmImport);
-    document.getElementById('syncBtn').addEventListener('click', openSyncModal);
     document.getElementById('courseForm').addEventListener('submit', handleCourseSubmit);
     document.getElementById('recordForm').addEventListener('submit', handleRecordSubmit);
+
+    // 更多菜单
+    const moreBtn = document.getElementById('moreBtn');
+    const moreMenu = document.getElementById('moreMenu');
+    moreBtn.addEventListener('click', (e) => { e.stopPropagation(); moreMenu.classList.toggle('open'); });
+    moreMenu.addEventListener('click', (e) => e.stopPropagation());
+    document.addEventListener('click', () => moreMenu.classList.remove('open'));
+    document.getElementById('menuSyncBtn').addEventListener('click', () => { moreMenu.classList.remove('open'); openSyncModal(); });
+    document.getElementById('menuImportBtn').addEventListener('click', () => { moreMenu.classList.remove('open'); openImportModal(); });
+    document.getElementById('menuExportBtn').addEventListener('click', () => { moreMenu.classList.remove('open'); exportData(); });
+
+    // 学习足迹折叠（默认收起）
+    const fpSection = document.getElementById('footprintSection');
+    if (localStorage.getItem('footprint_collapsed') === 'false') fpSection.classList.remove('collapsed');
+    else fpSection.classList.add('collapsed');
+    document.getElementById('footprintToggle').addEventListener('click', () => {
+      fpSection.classList.toggle('collapsed');
+      localStorage.setItem('footprint_collapsed', fpSection.classList.contains('collapsed'));
+      if (!fpSection.classList.contains('collapsed')) {
+        renderMonthCalendar(footprintView, null, 'footprintCalendar');
+      }
+    });
 
     document.querySelectorAll('[data-close]').forEach(btn => {
       btn.addEventListener('click', () => btn.closest('.modal-overlay').classList.remove('active'));
